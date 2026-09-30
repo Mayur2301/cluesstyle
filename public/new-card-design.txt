@@ -1,0 +1,211 @@
+<section className="py-20">
+  <div className="mx-auto max-w-[1700px] px-6 lg:px-10">
+
+    {/* Heading */}
+    <div className="mb-10 flex items-center gap-4">
+      <img
+        src="/gold-arrow.png"
+        alt="Arrow"
+        className="h-8 w-8 md:h-10 md:w-10"
+      />
+
+      <h2 className="text-3xl md:text-5xl font-black text-black">
+        Corporate Product Categories
+      </h2>
+    </div>
+
+    {/* Main Layout */}
+    <div className="grid grid-cols-1 lg:grid-cols-[1.25fr_2fr] gap-5">
+
+      {/* LEFT PORTRAIT CARD */}
+      <a
+        href="/products/corporate-gifts"
+        className="
+          group relative overflow-hidden
+          rounded-2xl
+          border border-black/20
+          shadow-[1px_1px_0px_#000]
+          hover:-translate-y-2
+          hover:shadow-[5px_8px_0px_#000]
+          transition-all duration-300
+          h-[800px]
+        "
+      >
+        <img
+          src="/corporate-gift.jpg"
+          alt="Corporate Gifts"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+
+        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/60 transition-all duration-300" />
+
+        <div
+          className="
+            absolute inset-0
+            flex flex-col justify-end
+            p-6 lg:p-8
+            text-white
+            opacity-0
+            translate-y-6
+            group-hover:opacity-100
+            group-hover:translate-y-0
+            transition-all duration-300
+          "
+        >
+          <h3 className="text-2xl lg:text-3xl font-bold">
+            Corporate Gifts
+          </h3>
+
+          <div className="mt-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black">
+              →
+            </div>
+
+            <span className="uppercase tracking-[0.15em] text-sm">
+              Merchandise
+            </span>
+          </div>
+        </div>
+      </a>
+
+      {/* RIGHT SIDE */}
+      <div className="flex flex-col gap-5">
+
+        {/* TOP WIDE VIDEO */}
+        <a
+          href="/products/custom-tshirts"
+          className="
+            group relative overflow-hidden
+            rounded-2xl
+            border border-black/20
+            shadow-[1px_1px_0px_#000]
+            hover:-translate-y-2
+            hover:shadow-[5px_8px_0px_#000]
+            transition-all duration-300
+            h-[400px]
+          "
+        >
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+          >
+            <source src="/polo-yellow.mp4" type="video/mp4" />
+          </video>
+
+          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/60 transition-all duration-300" />
+
+          <div className="absolute inset-0 flex flex-col justify-end p-6 text-white opacity-0 translate-y-6 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+            <h3 className="text-2xl font-bold">
+              Custom T-Shirts
+            </h3>
+
+            <div className="mt-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black">
+                →
+              </div>
+
+              <span className="uppercase tracking-[0.15em] text-sm">
+                Apparel
+              </span>
+            </div>
+          </div>
+        </a>
+
+        {/* BOTTOM 2 CARDS */}
+        <div className="grid grid-cols-2 gap-5">
+
+          {/* CARD 1 */}
+          <a
+            href="/products/hoodies"
+            className="
+              group relative overflow-hidden
+              rounded-2xl
+              border border-black/20
+              shadow-[1px_1px_0px_#000]
+              hover:-translate-y-2
+              hover:shadow-[5px_8px_0px_#000]
+              transition-all duration-300
+              h-[378px]
+            "
+          >
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 h-full w-full object-cover"
+            >
+              <source src="/corporate-gift-1-1.mp4" type="video/mp4" />
+            </video>
+
+            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/60 transition-all duration-300" />
+
+            <div className="absolute inset-0 flex flex-col justify-end p-5 text-white opacity-0 translate-y-6 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+              <h3 className="text-xl font-bold">
+                Premium Hoodies
+              </h3>
+
+              <div className="mt-3 flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-black">
+                  →
+                </div>
+
+                <span className="uppercase tracking-[0.15em] text-xs">
+                  Apparel
+                </span>
+              </div>
+            </div>
+          </a>
+
+          {/* CARD 2 */}
+          <a
+            href="/products/sports-wear"
+            className="
+              group relative overflow-hidden
+              rounded-2xl
+              border border-black/20
+              shadow-[1px_1px_0px_#000]
+              hover:-translate-y-2
+              hover:shadow-[5px_8px_0px_#000]
+              transition-all duration-300
+              h-[378px]
+            "
+          >
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 h-full w-full object-cover"
+            >
+              <source src="/barcellona.mp4" type="video/mp4" />
+            </video>
+
+            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/60 transition-all duration-300" />
+
+            <div className="absolute inset-0 flex flex-col justify-end p-5 text-white opacity-0 translate-y-6 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+              <h3 className="text-xl font-bold">
+                Sports Wear
+              </h3>
+
+              <div className="mt-3 flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-black">
+                  →
+                </div>
+
+                <span className="uppercase tracking-[0.15em] text-xs">
+                  Teamwear
+                </span>
+              </div>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>

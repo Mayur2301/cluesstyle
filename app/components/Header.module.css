@@ -1,0 +1,1013 @@
+/* ============================================================
+   Header.module.css — scoped, nothing leaks to the page
+   ============================================================ */
+
+/* ── Header shell ── */
+
+@font-face {
+  font-family: 'Avant Garde Book BT';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/avantgarde/AVGARDN_2.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Avant Garde Demi BT';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/fonts/avantgarde/AVGARDD_2.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Avant Garde Demi Oblique BT';
+  font-style: italic;
+  font-weight: 600;
+  src: url('/fonts/avantgarde/AVGARDDO_2.woff') format('woff');
+}
+
+.megaCol1IconWrap {
+  width: 60px;
+  height: 35px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.megaCol1Icon {
+  width: 60px !important;
+  height: 40px !important;
+  object-fit: contain;
+}
+.csHeader {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 999;
+  background: #fff;
+  border-bottom: 1px solid #e5e5e5;
+  font-family: 'Poppins', sans-serif;
+  overflow: visible;
+}
+
+/* ── Top bar ── */
+.csTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 75px;
+  padding: 0 16px;
+  gap: 8px;
+  max-width: 100%;
+}
+@media (min-width: 768px)  { .csTopbar { padding: 0 24px; gap: 12px; } }
+@media (min-width: 1024px) { .csTopbar { padding: 0 28px; gap: 0; } }
+
+/* ── Logo ── */
+.csLogoLink {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.csLogo {
+  height: 55px !important;
+  width: auto !important;
+  object-fit: contain;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .csLogo {
+    height: 20px !important;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .csLogo {
+    height: 34px !important;
+  }
+}
+
+/* ── Hamburger ── */
+.csHamburger {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  background: none; border: none; cursor: pointer;
+  color: #111; font-size: 17px;
+  border-radius: 6px; flex-shrink: 0;
+  transition: background 0.15s;
+}
+.csHamburger:hover { background: #f4f4f4; }
+@media (min-width: 1024px) { .csHamburger { display: none; } }
+
+/* ── Desktop Nav ── */
+.csDesktopNav { display: none; }
+@media (min-width: 1024px) {
+  .csDesktopNav { display: flex; align-items: center; gap: 0; flex: 1; padding: 0 16px; }
+}
+
+.csNavItem { position: relative; }
+
+.csNavLink {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+/* .csNavLink:hover,
+.csNavItemActive .csNavLink {
+  color: #111;
+  background: transparent;
+  border-color: #111;
+} */
+
+/* ── Active nav link (current page) ── */
+/* .csNavLinkActive {
+  color: #0099ee !important;
+  border-color: #0099ee !important;
+  background: #eef6ff !important;
+} */
+/* .csNavLinkActive:hover {
+  color: #007bcc !important;
+  border-color: #007bcc !important;
+} */
+
+.csNavChevron { font-size: 8px; color: #bbb; flex-shrink: 0; transition: transform 0.2s; }
+.csNavChevronRotated { transform: rotate(180deg); }
+
+/* ── Icons ── */
+.csIcons { display: flex; align-items: center; gap: 2px; flex-shrink: 0; margin-right: 14px; }
+
+.csIconBtn {
+  display: flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: none; border: none; cursor: pointer;
+  color: #333; font-size: 19px; text-decoration: none;
+  position: relative; transition: background 0.15s, color 0.15s;
+}
+.csIconBtn:hover { background: #f4f4f4; color: #111; }
+@media (max-width:768px){
+  .hideOnMobile{
+    display:none !important;
+  }
+}
+@media (max-width: 768px) {
+  .csLogoLink {
+    margin-left:-30px;
+    margin-top: 6px;
+    
+    }
+     .csLoginBtn svg {
+    background: transparent !important;
+    color: #111;
+    
+  }
+  .csLoginBtn  {
+    background: transparent !important;
+    color: #111;
+    
+  }
+}
+
+@media (max-width: 768px) {
+  .csLogo {
+    height: 44px !important;
+    
+  }
+}
+
+@media (max-width: 479px) {
+  .loggedIn svg {
+    background: transparent !important;
+    color: #16a34a !important; /* Green */
+    padding: 0;
+  }
+
+  .loggedIn span {
+    display: none;
+  }
+
+  .loggedIn svg {
+    font-size: 19px;
+  }
+  .csLoginBtn span {
+    display: none;
+  }
+}
+.csBadge {
+  position: absolute; top: 2px; right: 2px;
+  min-width: 16px; height: 16px; background: #111; color: #fff;
+  font-size: 10px; font-weight: 700; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; line-height: 1; pointer-events: none;
+}
+
+.csDesktopOnly { display: none; }
+@media (min-width: 640px) { .csDesktopOnly { display: flex; } }
+
+.csLoginBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  background: #111;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.csLoginBtn:hover { background: #444; }
+@media (max-width: 479px) {
+  .csLoginBtn {
+    padding: 4px 8px;
+    font-size: 11px;
+    gap: 4px;
+    border-radius: 4px;
+  }
+
+  .csLoginBtn svg {
+    font-size: 16px;
+  }
+}
+/* ── Search bar ── */
+.csSearchBar {
+  overflow: hidden; max-height: 0;
+  transition: max-height 0.25s ease;
+  background: #fafafa; border-top: 0 solid #eee;
+}
+.csSearchBarOpen { max-height: 56px; border-top-width: 1px; }
+.csSearchInner { display: flex; align-items: center; gap: 10px; padding: 10px 20px; }
+.csSearchIcon { color: #bbb; font-size: 13px; flex-shrink: 0; }
+.csSearchInput {
+  flex: 1; border: none; background: none; outline: none;
+  font-size: 14px; color: #111; font-family: inherit;
+}
+.csSearchInput::placeholder { color: #ccc; }
+.csSearchClose {
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer;
+  color: #bbb; font-size: 13px; padding: 4px; border-radius: 4px;
+  transition: color 0.15s;
+}
+.csSearchClose:hover { color: #111; }
+
+/* ── Spacer ── */
+.csHeaderSpacer { height: 56px; width: 100%; }
+
+/* ================================================================
+   MEGA MENU — 3-column layout
+   Col 1: top-level categories
+   Col 2: sub-items for hovered category
+   Col 3: featured image cards
+   ================================================================ */
+
+.megaWrapper {
+  position: absolute;
+  top: 100%; left: 0; right: 0;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.10);
+  animation: megaIn 0.15s ease;
+  overflow: visible;
+  z-index: 998;
+}
+@keyframes megaIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.megaInner {
+  display: flex;
+  max-width: 1280px;
+  margin: 0 auto;
+  min-height: 320px;
+}
+
+/* ── Col 1: Top-level category list ── */
+.megaCol1 {
+  width: 300px;
+  flex-shrink: 0;
+  border-right: 1px solid #000000;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.megaCol1Item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 20px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #020202;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s, border-color 0.12s, outline 0.12s;
+  gap: 8px;
+  border-left: 3px solid transparent;
+}
+
+/* ── OUTLINE-ONLY hover for Col 1 ── */
+.megaCol1Item:hover {
+  background: transparent;
+  color: #000000;
+  border-left-color: #000000;
+  outline: 1.5px solid #000000;
+  border-radius: 4px;
+}
+
+.megaCol1ItemActive {
+  background: #fcfcfc;
+  color: #000000;
+  font-weight: 500;
+  border-left-color: #0099ee;
+}
+.megaCol1Arrow { font-size: 9px; color: #ccc; margin-left: auto; }
+.megaCol1ItemActive .megaCol1Arrow { color: #ffffff; }
+
+/* ── Active Col 1 item (current URL path) ── */
+.megaCol1ItemPathActive {
+  background: #eef6ff !important;
+  color: #0099ee !important;
+  border-left-color: #0099ee !important;
+  font-weight: 600 !important;
+}
+.megaCol1ItemPathActive .megaCol1Arrow {
+  color: #0099ee !important;
+}
+
+/* ── "Listing Soon" items (Stage 1 launch — see Header.tsx `comingSoon`) ──
+   Greyed-out label/icon + a small amber "Soon" badge. Still fully
+   clickable — click sends the shopper to /coming-soon instead of the real
+   (not-yet-live) product page, so this must never disable pointer-events. */
+.megaItemSoon {
+  color: #b3b3b3 !important;
+}
+.megaItemSoon .megaCol1Icon {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+.megaItemSoon:hover {
+  color: #999 !important;
+  border-left-color: #ddd !important;
+  outline-color: #ddd !important;
+}
+/* Path-active styling should never apply to a coming-soon item (it can't
+   be the current page), but keep this last just in case data ever changes. */
+.megaCol1ItemPathActive.megaItemSoon {
+  background: transparent !important;
+  color: #b3b3b3 !important;
+  border-left-color: transparent !important;
+  font-weight: 400 !important;
+}
+
+.soonBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #fff3e0;
+  color: #b56a00;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.megaCtaGroup {
+  margin-top: auto;
+  padding: 14px 16px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.megaBtn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 14px; border-radius: 6px;
+  font-size: 13px; font-weight: 600;
+  text-decoration: none; transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.megaBtnOutline {
+  border: 1.5px solid #ccc; color: #000; background: transparent;
+}
+.megaBtnOutline:hover {
+  border-color: #000;
+  background: transparent;
+  color: #000;
+}
+
+.megaBtnSolid {
+  background: #000000; color: #fff !important; border: 1.5px solid transparent;
+}
+.megaBtnSolid:hover {
+  background: transparent;
+  color: #000 !important;
+  border-color: #000;
+}
+
+/* ── Col 2: Sub-items for hovered category ── */
+.megaCol2 {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid #f0f0f0;
+  padding: 16px 0;
+  background: #fafafa;
+}
+
+.megaCol2Empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #ddd;
+  font-size: 13px;
+}
+
+.megaCol2Item {
+  display: block;
+  padding: 9px 20px;
+  font-size: 13.5px;
+  color: #444;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: background 0.12s, color 0.12s, border-color 0.12s, outline 0.12s;
+}
+.megaCol2Item:hover {
+  background: transparent;
+  color: #111;
+  border-left-color: #111;
+  outline: 1.5px solid #111;
+  border-radius: 4px;
+}
+
+/* ── Active Col 2 sub-item (current URL path) ── */
+.megaCol2ItemActive {
+  color: #0099ee !important;
+  border-left-color: #0099ee !important;
+  background: #eef6ff !important;
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+.megaCol2Divider {
+  height: 1px;
+  background: #ebebeb;
+  margin: 8px 16px;
+}
+
+.megaCol2BrowseAll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0099ee;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: background 0.12s;
+}
+.megaCol2BrowseAll:hover { background: #eef6ff; border-left-color: #0099ee; }
+
+/* ── Active "Browse All" link ── */
+.megaCol2BrowseAllActive {
+  background: #eef6ff !important;
+  border-left-color: #0099ee !important;
+  font-weight: 700;
+}
+
+/* ── Col 3: Featured image cards ── */
+.megaCol3 {
+  flex: 1;
+  display: flex;
+  padding: 20px 24px;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.megaFeatCard {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  border: 1px solid #efefef;
+  border-radius: 14px;
+  overflow: hidden;
+  background: transparent;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+  min-width: 0;
+  height: 100%;
+  
+}
+.megaFeatCard:hover {
+  border-color: #cce4ff;
+  box-shadow: 0 6px 20px rgba(0,153,238,0.10);
+  transform: translateY(-2px);
+}
+
+.megaFeatImgWrap {
+  position: relative;
+  height: 350px;
+  width: 100%;
+  background: #f2f2f2;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.megaFeatImg {
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  height: 350px;
+}
+.megaFeatCard:hover .megaFeatImg { transform: scale(1.04); }
+
+.megaFeatImgPlaceholder {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, #e8f4ff 0%, #d0e8f8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+}
+
+.megaFeatTag {
+  position: absolute;
+  top: 10px; right: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid #cce4ff;
+  background: #087006;
+  color: #ffffff;
+}
+
+.megaFeatBody { padding: 12px 14px; }
+
+.megaFeatTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.megaFeatCard:hover .megaFeatTitle { color: #0099ee; }
+
+.megaFeatDesc {
+  font-size: 9px;
+  color: #888;
+  line-height: 1.1;
+}
+
+/* ================================================================
+   MOBILE DRAWER
+   ================================================================ */
+.mobileBackdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); z-index: 1000;
+}
+.mobileBackdropOpen { display: block; }
+
+.mobileDrawer {
+  position: fixed; top: 0; left: 0; bottom: 0;
+   width: min(320px, 85vw); background: #fff;
+  z-index: 1001; display: flex; flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.26s cubic-bezier(0.4,0,0.2,1);
+  overflow: hidden;
+}
+.mobileDrawerOpen { transform: translateX(0); }
+
+.mobileDrawerHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+}
+.mobileLogo { height: 28px; width: auto; object-fit: contain; }
+
+.mobileCloseBtn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: #f5f5f5; border-radius: 50%;
+  cursor: pointer; color: #444; font-size: 14px; transition: background 0.15s;
+}
+.mobileCloseBtn:hover { background: #ebebeb; }
+
+.mobileDrawerBody {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 0;
+}
+
+.mobileUserRow {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 0 14px 12px; border-bottom: 1px solid #f5f5f5; margin-bottom: 6px;
+}
+.mobileUserLink {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 11px; border-radius: 8px;
+  font-size: 14px; color: #444; text-decoration: none;
+  font-weight: 500; transition: background 0.12s; position: relative;
+}
+.mobileUserLink:hover { background: #f5f5f5; color: #111; }
+
+.mobileBadge {
+  margin-left: auto; background: #111; color: #fff;
+  font-size: 10px; font-weight: 700; border-radius: 999px; padding: 1px 6px;
+}
+
+.mobileNav { display: flex; flex-direction: column; gap: 1px; padding: 0 14px; }
+
+.mobileNavItem {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 13px; border-radius: 8px;
+  font-size: 14.5px; font-weight: 500; color: #222;
+  text-decoration: none; border: none; background: none;
+  cursor: pointer; width: 100%; text-align: left;
+  font-family: inherit; transition: background 0.12s;
+}
+.mobileNavItem:hover { background: #f5f5f5; }
+
+/* ── Active mobile nav item ── */
+.mobileNavItemActive {
+  color: #0099ee !important;
+  background: #eef6ff !important;
+  font-weight: 600 !important;
+}
+
+.mobileChevron { font-size: 10px; color: #ccc; transition: transform 0.2s; flex-shrink: 0; }
+.mobileChevronRotated { transform: rotate(180deg); }
+
+.mobileSubmenu {
+  margin: 3px 0 3px 13px; border-left: 2px solid #f0f0f0;
+  padding-left: 12px; display: flex; flex-direction: column; gap: 1px;
+}
+.mobileSubmenuItem {
+  display: flex; align-items: center;
+  padding: 9px 10px; font-size: 13.5px; color: #555;
+  text-decoration: none; border-radius: 7px; transition: background 0.12s, color 0.12s;
+}
+.mobileSubmenuItem:hover { background: #f5f5f5; color: #111; }
+
+/* ── Active mobile submenu category ── */
+.mobileSubmenuItemActive {
+  color: #0099ee !important;
+  background: #eef6ff !important;
+  font-weight: 600;
+}
+
+.mobileSubmenuAll {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 10px; font-size: 12.5px; font-weight: 600;
+  color: #0099ee; text-decoration: none; border-radius: 7px; margin-top: 2px;
+  transition: background 0.12s;
+}
+.mobileSubmenuAll:hover { background: #f0f8ff; }
+
+.mobileDrawerFooter { padding: 14px 18px; border-top: 1px solid #f0f0f0; flex-shrink: 0; }
+.mobileDesignBtn {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 12px; background: #0099ee; color: #fff !important;
+  border-radius: 8px; font-size: 14px; font-weight: 700;
+  letter-spacing: 0.04em; text-decoration: none; transition: background 0.15s;
+}
+.mobileDesignBtn:hover { background: #007bcc; }
+
+/* ── Custom animated button ── */
+.customBtn {
+  position: relative;
+  overflow: hidden;
+  height: 40px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111;
+  cursor: pointer;
+  margin-right: 8px;
+  background: linear-gradient(
+    270deg,
+    #fff7ad,
+    #ffd6e7,
+    #d6f8ff,
+    #e4ffd6,
+    #f3d6ff,
+    #ffe8c7,
+    #fff7ad
+  );
+  background-size: 1400% 1400%;
+  animation: pastelFlow 10s ease infinite;
+  box-shadow:
+    0 4px 14px rgba(255, 214, 231, 0.35),
+    0 4px 20px rgba(214, 248, 255, 0.25);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btnIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .customBtn {
+    height: 36px;
+    padding: 0 18px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .customBtn {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.3;
+    border-radius: 16px;
+  }
+}
+
+.customBtn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 18px rgba(255, 214, 231, 0.45),
+    0 6px 24px rgba(214, 248, 255, 0.35);
+}
+
+@keyframes pastelFlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Bulk order modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.bulkModal {
+  width: 900px;
+  max-width: 100%;
+  min-height: 500px;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+}
+
+.modalClose {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.bulkModalLeft {
+  position: relative;
+  min-height: 500px;
+}
+
+.bulkModalImage {
+  object-fit: cover;
+}
+
+.bulkModalRight {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.bulkModalRight h2 {
+  margin-bottom: 10px;
+  font-size: 32px;
+}
+
+.bulkModalRight p {
+  margin-bottom: 24px;
+  color: #666;
+}
+
+.bulkForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bulkForm input,
+.bulkForm select,
+.bulkForm textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 15px;
+  outline: none;
+}
+
+.bulkForm input:focus,
+.bulkForm select:focus,
+.bulkForm textarea:focus {
+  border-color: #111;
+}
+
+.submitBtn {
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #111;
+  color: #fff;
+}
+
+.submitBtn:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .bulkModal {
+    grid-template-columns: 1fr;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .bulkModalLeft {
+    min-height: 220px;
+  }
+
+  .bulkModalRight {
+    padding: 24px;
+  }
+}
+
+/* ── Call / WhatsApp button ── */
+.callBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #25d366;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  animation: shake 2s infinite;
+  transition: all 0.3s ease;
+}
+
+.callBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(37, 211, 102, 0.3);
+}
+
+.callIconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #333;
+  font-size: 19px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.callIconBtn:hover {
+  background: #f4f4f4;
+  color: #111;
+}
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0); }
+  5%        { transform: rotate(-10deg); }
+  10%       { transform: rotate(10deg); }
+  15%       { transform: rotate(-8deg); }
+  20%       { transform: rotate(8deg); }
+  25%       { transform: rotate(0); }
+}
+
+/* ── Contact modal ── */
+.contactModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 24px;
+  padding: 24px;
+  z-index: 9999;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+}
+
+.contactAction,
+.contactActionWhatsapp {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px;
+  border-radius: 14px;
+  margin-top: 14px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.contactAction {
+  background: #111;
+  color: white;
+}
+
+.contactActionWhatsapp {
+  background: #25d366;
+  color: white;
+}
+
+.closeModalBtn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+}
+
+/* ── Mobile Bulk Order button ── */
+.mobileBulkBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - 28px);
+  margin: 0 14px 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #e0e0e0;
+  background: #fafafa;
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.mobileBulkBtn:hover {
+  background: #f0f0f0;
+}

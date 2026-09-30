@@ -1,0 +1,140 @@
+.container {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 16px;
+  padding: 24px;
+  margin: 20px 0;
+  border: 1px solid #e2e8f0;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.header h3 {
+  margin: 0 0 8px 0;
+  color: #1a202c;
+  font-size: 20px;
+}
+
+.header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.inputGroup, .otpInputGroup {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.emailInput, .otpInput {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.otpInput {
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 4px;
+  font-family: monospace;
+}
+
+.emailInput:focus, .otpInput:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.sendBtn, .verifyBtn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.sendBtn:hover:not(:disabled), .verifyBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.sendBtn:disabled, .verifyBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emailInfo {
+  background: #f1f5f9;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.changeEmailBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #667eea;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.infoText {
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.resendBtn {
+  background: none;
+  border: none;
+  color: #667eea;
+  cursor: pointer;
+  width: 100%;
+  padding: 8px;
+}
+
+.countdown {
+  text-align: center;
+  color: #64748b;
+  font-size: 13px;
+  margin: 12px 0 0;
+}
+
+.error {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-top: 16px;
+}
+
+.success {
+  background: #d1fae5;
+  color: #059669;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+  .container { padding: 20px; }
+  .inputGroup, .otpInputGroup { flex-direction: column; }
+  .sendBtn, .verifyBtn { width: 100%; }
+}

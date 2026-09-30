@@ -1,0 +1,336 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  background: #0a0a0a;
+  color: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+
+.bgVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  filter: grayscale(100%) contrast(1.1);
+}
+
+.bgOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1;
+}
+
+.shell {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1000px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid #0a0a0a;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- LEFT: type selector ---------- */
+
+.typePanel {
+  background: #0a0a0a;
+  color: #ffffff;
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  border-right: 1px solid #0a0a0a;
+}
+
+.brand h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px 0;
+}
+
+.brand h6 {
+  font-size: 16px;
+  color: #a3a3a3;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.typeList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  flex: 1;
+}
+
+.typeCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 26px 12px 16px;
+  background: transparent;
+  border: 1px solid #333333;
+  color: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+
+.typeCard:hover {
+  border-color: #ffffff;
+}
+
+.typeCard:active {
+  transform: scale(0.99);
+}
+
+.typeCardActive {
+  background: #ffffff;
+  color: #0a0a0a;
+  border-color: #ffffff;
+}
+
+.typeGlyph {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: #737373;
+}
+
+.typeCardActive .typeGlyph {
+  color: #4a4a4a;
+}
+
+.typeIcon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.typeIcon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* If your icon PNGs/SVGs are solid black on transparent, uncomment below
+   so they turn white on the dark card and stay black when the card is active */
+/*
+.typeIcon img { filter: invert(1) brightness(2); }
+.typeCardActive .typeIcon img { filter: none; }
+*/
+
+.typeText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.typeLabel {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.typeDesc {
+  font-size: 11px;
+  color: #a3a3a3;
+  line-height: 1.4;
+}
+
+.typeCardActive .typeDesc {
+  color: #4a4a4a;
+}
+
+/* ---------- RIGHT: form panel ---------- */
+
+.formPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 32px;
+}
+
+.formPanelInner {
+  width: 100%;
+  max-width: 400px;
+}
+
+.header {
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f9b004;
+  margin: 0 0 8px 0;
+}
+
+.header span {
+  font-size: 37px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.12);
+}
+.error {
+  background: #0a0a0a;
+  color: #ffffff;
+  border: 1px solid #0a0a0a;
+  padding: 12px 14px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroup label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.formGroup input {
+  border: 1px solid #d4d4d4;
+  background: #ffffff;
+  color: #0a0a0a;
+  padding: 12px 14px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease;
+  width: 100%;
+}
+
+.formGroup input:focus {
+  border-color: #0a0a0a;
+}
+
+.formGroup input::placeholder {
+  color: #252525;
+}
+
+.submitBtn {
+  margin-top: 6px;
+  background: #0a0a0a;
+  color: #ffffff;
+  border: 1px solid #0a0a0a;
+  padding: 13px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.submitBtn:hover {
+  opacity: 0.85;
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switchText {
+  text-align: center;
+  font-size: 13px;
+  color: #737373;
+  margin: 4px 0 0 0;
+}
+
+.switchBtn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .typePanel {
+    border-right: none;
+    border-bottom: 1px solid #0a0a0a;
+    padding: 32px 24px;
+    gap: 24px;
+  }
+
+  .typeList {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .formPanel {
+    padding: 36px 24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .brand h1 {
+    font-size: 22px;
+  }
+
+  .typeList {
+    grid-template-columns: 1fr;
+  }
+
+  .typeCard {
+    padding: 14px 16px;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .header h2 {
+    font-size: 20px;
+  }
+}
+.logo {
+  height: 50px;
+  width: auto;
+  margin-bottom: 8px;
+ 
+}
