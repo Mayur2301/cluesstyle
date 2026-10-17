@@ -9,7 +9,7 @@ import CareInstructions from "@/app/components/warrenty";
 
 import RecentlyViewed from "@/app/components/RecentlyViewed";
 import ProductReviews from "@/app/components/ProductReviews";
-import { productsData, DEFAULT_OFFER, type Product, type MediaItem, type Offer, type FabricSubCategoryMap, type GsmOption } from "@/app/lib/badge-collection";
+import { productsData, DEFAULT_OFFER, BADGE_QTY_TIERS, type Product, type MediaItem, type Offer, type FabricSubCategoryMap, type GsmOption } from "@/app/lib/badge-collection";
 import {
   COST_PER_UNIT,
   SAME_DAY_SURCHARGE,
@@ -26,6 +26,7 @@ import {
   getEmbroideryAutoNote,
   getDtfAutoNote,
   type DeliveryType,
+  type QtyTier,
 } from "@/app/lib/pricing";
 import { addToCart } from "@/app/lib/cart";
 import PopularSearches from "@/app/components/PopularSearches";
@@ -4410,6 +4411,202 @@ function BadgeCustomizedPromoCard({ categoryLabel, onClick, previewImage }: { ca
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
+// ── Order Type (Single Piece / Bulk) ───────────────────────────────────────────
+// Same two cards the apparel pages show. "Single" covers quantities below the
+// first bulk tier (BADGE_QTY_TIERS[0].minQty); "Bulk" reveals the tier cards in
+// the Quantity step below.
+function BadgeOrderTypeSection({ orderType, onSelectOrderType, bulkStartsAt }: {
+  orderType: "single" | "bulk";
+  onSelectOrderType: (type: "single" | "bulk") => void;
+  bulkStartsAt: number;
+}) {
+  const cards: { type: "single" | "bulk"; icon: string; title: string; sub: string }[] = [
+    { type: "single", icon: "/badge-collection/single-icon.webp", title: "Single Piece", sub: `Order 1–${bulkStartsAt - 1} badges` },
+    { type: "bulk", icon: "/badge-collection/bulk-icon1.webp", title: "Bulk Order", sub: `${bulkStartsAt}+ badges at lower prices` },
+  ];
+  return (
+    <div>
+      <span className="text-[16px] font-bold text-gray-900 mb-2.5 block">Choose Order Type</span>
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+        {cards.map((c) => {
+          const selected = orderType === c.type;
+          return (
+            <button
+              key={c.type}
+              type="button"
+              onClick={() => onSelectOrderType(c.type)}
+              className={`relative flex flex-col items-center text-center rounded-xl border p-3 transition-all ${
+                selected ? "border-blue-400 bg-blue-50/40 ring-1 ring-blue-400" : "border-gray-200 bg-white hover:border-gray-300"
+              }`}
+            >
+              <span className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selected ? "border-blue-600" : "border-gray-300"}`}>
+                {selected && <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+              </span>
+              <span className="relative flex-shrink-0 w-18 h-18 mb-2">
+                <Image src={c.icon} alt={c.title} fill className="object-contain" />
+              </span>
+              <span className="block text-[14px] font-bold text-gray-900 leading-tight">{c.title}</span>
+              <span className="block text-[11.5px] text-gray-500 leading-snug mt-1">{c.sub}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Quantity (tier cards in Bulk mode + stepper) ───────────────────────────────
+// Collapsed view: desktop shows 4 tier cards + a "More Qty" card (5 columns),
+// mobile shows 3 tier cards + "More Qty" (4 columns). Clicking "More Qty"
+// reveals every tier in the same grid.
+const BADGE_VISIBLE_TIERS_DESKTOP = 4;
+const BADGE_VISIBLE_TIERS_MOBILE = 3;
+
+function BadgeQuantityTierSelector({ displayPrice, quantity, setQuantity, orderType, tiers, minUnitPrice, stepNumber = 3 }: {
+  displayPrice: number; quantity: number; setQuantity: (q: number) => void;
+  orderType: "single" | "bulk"; tiers: QtyTier[]; minUnitPrice?: number; stepNumber?: number;
+}) {
+  const [inputVal, setInputVal] = useState(String(quantity));
+  const [showAllTiers, setShowAllTiers] = useState(false);
+  // Tailwind's `sm` breakpoint (640px) — decides how many tier cards fit in
+  // the collapsed row, so a selected tier is never hidden behind "More Qty".
+  const [isSm, setIsSm] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const update = () => setIsSm(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  const collapsedCount = isSm ? BADGE_VISIBLE_TIERS_DESKTOP : BADGE_VISIBLE_TIERS_MOBILE;
+
+  useEffect(() => { setInputVal(String(quantity)); }, [quantity]);
+
+  const bulkStartsAt = tiers[0]?.minQty ?? 2;
+  const isLowQty = quantity < bulkStartsAt;
+  // Below the first tier no tier is "current" (single-piece territory).
+  const activeTier = isLowQty ? null : tiers.reduce((acc, t) => (quantity >= t.minQty ? t : acc), tiers[0]);
+  const activeTierIndex = activeTier ? tiers.findIndex((t) => t.minQty === activeTier.minQty) : -1;
+
+  // A typed quantity that lands on a tier hidden behind "More Qty"
+  // auto-expands so the matching tier is visible and highlighted.
+  useEffect(() => {
+    if (activeTierIndex >= collapsedCount) setShowAllTiers(true);
+  }, [activeTierIndex, collapsedCount]);
+
+  const visibleTiers = showAllTiers ? tiers : tiers.slice(0, collapsedCount);
+  const hiddenTiers = tiers.slice(collapsedCount);
+
+  const commit = (next: number) => {
+    const valid = Math.max(1, Math.floor(next) || 1);
+    setQuantity(valid);
+    setInputVal(String(valid));
+  };
+
+  const renderTierCard = (tier: QtyTier) => {
+    const isCurrent = activeTier?.minQty === tier.minQty;
+    const price = getPricePerUnit(displayPrice, tier.minQty, tiers, minUnitPrice);
+    return (
+      <button
+        key={tier.minQty}
+        type="button"
+        onClick={() => commit(tier.minQty)}
+        className={`relative flex flex-col items-center gap-1.5 rounded-xl border-2 px-2 py-3 transition-all ${
+          isCurrent ? "border-blue-200 bg-blue-50" : "border-gray-100 bg-white hover:border-gray-200"
+        }`}
+      >
+        {isCurrent ? (
+          <span className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+          </span>
+        ) : tier.discount > 0 ? (
+          <span className="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full whitespace-nowrap">
+            {tier.discount}% OFF
+          </span>
+        ) : (
+          <span className="h-[18px]" />
+        )}
+        <span className={`text-[14px] font-bold whitespace-nowrap ${isCurrent ? "text-blue-700" : "text-gray-900"}`}>
+          {tier.maxQty === Infinity ? `${tier.minQty}+` : `${tier.minQty}-${tier.maxQty}`}
+        </span>
+        <span className={`text-[11px] font-semibold pt-1.5 pb-1.5 border-t border-b border-dashed w-full text-center ${isCurrent ? "text-blue-600 border-blue-300" : "text-gray-500 border-gray-300"}`}>
+          {formatPrice(price)} / unit
+        </span>
+      </button>
+    );
+  };
+
+  return (
+    <div>
+      <span className="text-sm font-bold text-[#000] uppercase tracking-wide mb-3 block">{stepNumber}. Quantity</span>
+
+      {orderType === "bulk" && (
+        // Mobile: 4 columns (3 tiers + "More Qty"). Desktop: 5 columns (4 tiers
+        // + "More Qty"). Expanded, every tier flows into the same columns.
+        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 sm:gap-3">
+          {visibleTiers.map(renderTierCard)}
+          {hiddenTiers.length > 0 && !showAllTiers && (
+            <button
+              type="button"
+              onClick={() => setShowAllTiers(true)}
+              className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-gray-300 px-2 py-3 hover:border-gray-400 hover:bg-gray-50 transition-all"
+            >
+              <span className="flex items-center gap-1 text-sm font-bold text-gray-900">
+                More Qty
+                <svg className="w-3.5 h-3.5 text-orange-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
+                </svg>
+              </span>
+              <span className="text-[11px] text-gray-400">{hiddenTiers[0].minQty}+</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="flex flex-row items-center gap-2 mt-3 sm:gap-3 w-full">
+        <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden w-fit flex-shrink-0">
+          <button
+            type="button"
+            disabled={quantity <= 1}
+            onClick={() => commit(quantity - 1)}
+            className="w-11 h-11 flex items-center justify-center text-xl font-medium text-gray-600 hover:bg-gray-100 transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            −
+          </button>
+          <input
+            type="number"
+            min={1}
+            value={inputVal}
+            onChange={(e) => setInputVal(e.target.value)}
+            onBlur={() => {
+              const parsed = parseInt(inputVal, 10);
+              commit(isNaN(parsed) ? 1 : parsed);
+            }}
+            className="w-16 text-center font-bold text-lg border-none outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => commit(quantity + 1)}
+            className="w-11 h-11 flex items-center justify-center text-xl font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            +
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1.5 sm:gap-2.5 bg-blue-50 border border-blue-100 rounded-xl px-2 sm:px-3.5 py-2 sm:py-2.5 flex-1 sm:flex-none sm:w-auto sm:max-w-xs min-w-0">
+          <span className="text-[10px] sm:text-[13px] font-semibold text-blue-900 leading-snug">
+            {isLowQty
+              ? <>Order 1–{bulkStartsAt - 1} pieces<br />switch to Bulk for lower pricing</>
+              : <>Get lower price<br />on higher quantity</>}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProductDetailPage() {
   const params  = useParams();
   const slug    = params.slug as string;
@@ -4493,6 +4690,10 @@ export default function ProductDetailPage() {
   }, [colorFromUrl]);
   const [quantity,       setQuantity]       = useState<number | "">(product.quantityReq || 1);
   const [quantityInput,  setQuantityInput]  = useState(String(product.quantityReq || 1));
+  // "single" covers quantities below the first bulk tier; "bulk" shows the
+  // tier cards. Kept in sync with the quantity below (see the effect after
+  // numQty is computed).
+  const [orderType,      setOrderType]      = useState<"single" | "bulk">("single");
   const [wishlist,       setWishlist]       = useState(false);
   const [sizeError,      setSizeError]      = useState(false);
   const [activeTab,      setActiveTab]      = useState<"details" | "shipping" | "returns" | "none">("none");
@@ -4899,10 +5100,18 @@ const sizeAllocationComplete = !product.sizes || totalAllocated === numQty;
     ? product.sizeDetails?.[selectedSize]?.gsmVariants?.[selectedVariantGsm]?.price ?? product.displayPrice
     : product.displayPrice;
 
+  // This badge's own bulk tiers + price floor (same two values the order APIs
+  // read from the product record), so the price shown here is exactly the
+  // price charged.
+  const activeQtyTiers = product.qtyTiers ?? BADGE_QTY_TIERS;
+  const bulkThreshold = activeQtyTiers[0]?.minQty ?? 2;
+
   const { pricePerUnit, sameDayCharge: staticSameDayCharge } = computeOrderTotal({
     displayPrice: effectiveBasePrice,
     quantity: numQty,
     deliveryType,
+    tiers: activeQtyTiers,
+    minUnitPrice: product.minUnitPrice,
   });
 
   // Same-day delivery is never charged up front — it's negotiated by phone
@@ -4938,8 +5147,28 @@ const sizeAllocationComplete = !product.sizes || totalAllocated === numQty;
   const dtfCharge = printType === "dtf" ? computeDtfCharge(numQty, activeLogoSides) : 0;
   const printCharge = embroideryCharge + dtfCharge;
   const totalPrice = pricePerUnit * numQty + effectiveSameDayCharge + printCharge;
-  const discountPct = getDiscountForQty(numQty);
+  const discountPct = getDiscountForQty(numQty, activeQtyTiers);
   const activeOffer = product.offer ?? DEFAULT_OFFER;
+
+// A quantity at or above the first bulk tier implies a bulk order — flip the
+// toggle automatically so it always matches the quantity.
+  useEffect(() => {
+    if (numQty >= bulkThreshold && orderType === "single") setOrderType("bulk");
+  }, [numQty, orderType, bulkThreshold]);
+
+  const handleSelectOrderType = (type: "single" | "bulk") => {
+    setOrderType(type);
+    // Keep quantity consistent with the card just picked: Single drops a
+    // bulk-sized quantity back to 1 (otherwise the sync effect above would
+    // flip straight back to Bulk), Bulk starts at the first tier.
+    if (type === "single" && numQty >= bulkThreshold) {
+      setQuantity(1);
+      setQuantityInput("1");
+    } else if (type === "bulk" && numQty < bulkThreshold) {
+      setQuantity(bulkThreshold);
+      setQuantityInput(String(bulkThreshold));
+    }
+  };
 
 const handleAddToCart = () => {
     const embroideryAutoNote = printType === "embroidery" ? getEmbroideryAutoNote(numQty, activeLogoSides) : null;
@@ -5185,6 +5414,13 @@ const handleAddToCart = () => {
                 single-side, no-printType-choice product instead of a full
                 fabricType/printType (DTF vs embroidery) apparel flow. */}
 
+            {/* Choose Order Type — Single Piece / Bulk (same as apparels). */}
+            <BadgeOrderTypeSection
+              orderType={orderType}
+              onSelectOrderType={handleSelectOrderType}
+              bulkStartsAt={bulkThreshold}
+            />
+
             {/* 0. Choose Badge Type — only on the generic "Customized Badges"
                 product (isStylePicker: true in the data). Picking a card just
                 swaps selectedStyleSlug, which the image gallery and the logo
@@ -5368,10 +5604,13 @@ const handleAddToCart = () => {
             )}
 
             {/* 3. Quantity */}
-            <QuantitySelector
-              displayPrice={product.displayPrice}
+            <BadgeQuantityTierSelector
+              displayPrice={effectiveBasePrice}
               quantity={numQty}
               setQuantity={setQuantity}
+              orderType={orderType}
+              tiers={activeQtyTiers}
+              minUnitPrice={product.minUnitPrice}
               stepNumber={3 + badgeStepOffset}
             />
 
@@ -5638,7 +5877,7 @@ const handleAddToCart = () => {
         </div>
       </section>
 
-      <RecentlyViewed />
+
 
       {/* Size Guide Modal */}
       {showSizeGuide && (

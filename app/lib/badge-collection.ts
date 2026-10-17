@@ -8,6 +8,8 @@
 // designOptions, isStylePicker, etc.) is simply left undefined on every
 // badge product — none of those flows apply here.
 
+import type { QtyTier } from "@/app/lib/pricing";
+
 export interface MediaItem {
   type: "image" | "video";
   src: string;
@@ -120,6 +122,16 @@ export interface Product {
   // Icon shown next to the upload dropzone in step "Upload Your Logo".
   // Falls back to a generic upload icon when a product doesn't set its own.
   uploadIcon?: string;
+  // This category's own bulk-quantity discount table — attached to every
+  // badge below by attachSkus() (see BADGE_QTY_TIERS). Read by BOTH the
+  // product page and create-razorpay-order/create-cart-order, so what is
+  // shown is exactly what is charged.
+  qtyTiers?: QtyTier[];
+  // Lowest per-unit price this badge may be sold at. Badges sell at Rs.69-79,
+  // far below pricing.ts's apparel-based default floor (Rs.260), which would
+  // otherwise clamp every badge price UP to Rs.260. 0 = no floor beyond the
+  // tier table itself.
+  minUnitPrice?: number;
   simpleVariantPicker?: boolean;
   gsmOptions?: GsmOption[];
   cardVariantPicker?: boolean;
@@ -142,15 +154,33 @@ export const DEFAULT_OFFER: Offer = {
   discountPct: 5,
 };
 
+// ── Bulk quantity tiers (shared by every badge) ──────────────────────────────
+// One piece (quantity 1-4) is sold at the product's displayPrice. Bulk starts
+// at the first tier's minQty (5) — ProductDetailClient reads that same number
+// to decide where "Single Piece" ends. To change badge bulk pricing, edit
+// only this array.
+export const BADGE_QTY_TIERS: QtyTier[] = [
+  { minQty: 5,    maxQty: 9,        discount: 5,  label: "5-9" },
+  { minQty: 10,   maxQty: 24,       discount: 10, label: "10-24" },
+  { minQty: 25,   maxQty: 49,       discount: 15, label: "25-49" },
+  { minQty: 50,   maxQty: 99,       discount: 20, label: "50-99" },
+  { minQty: 100,  maxQty: 199,      discount: 25, label: "100-199" },
+  { minQty: 200,  maxQty: 299,      discount: 30, label: "200-299" },
+  { minQty: 300,  maxQty: 499,      discount: 35, label: "300-499" },
+  { minQty: 500,  maxQty: 749,      discount: 40, label: "500-749" },
+  { minQty: 750,  maxQty: 999,      discount: 45, label: "750-999" },
+  { minQty: 1000, maxQty: Infinity, discount: 50, label: "1000+" },
+];
+
 const rawProductsData: Omit<Product, "sku">[] = [
   {
     id: "1",
     name: "Customized Badges",
     slug: "customized-badges",
-    basePrice: 39,
-    displayPrice: 49,
-    originalPrice: 89,
-    discount: 45,
+    basePrice: 69,
+    displayPrice: 79,
+    originalPrice: 119,
+    discount: 34,
     images: [""],
     media: [
       { type: "image", src: "/badge-collection/custom.webp" },
@@ -185,10 +215,10 @@ const rawProductsData: Omit<Product, "sku">[] = [
     id: "2",
     name: "Round Pin Badge",
     slug: "round-pin-badge",
-    basePrice: 29,
-    displayPrice: 39,
-    originalPrice: 69,
-    discount: 43,
+    basePrice: 59,
+    displayPrice: 69,
+    originalPrice: 99,
+    discount: 30,
     images: [""],
     media: [
       { type: "image", src: "/badge-collection/round-pin-badge/round-pin-badges-2.webp" },
@@ -233,10 +263,10 @@ const rawProductsData: Omit<Product, "sku">[] = [
     id: "3",
     name: "Round Magnet Badge",
     slug: "round-magnet-badge",
-    basePrice: 29,
-    displayPrice: 39,
-    originalPrice: 69,
-    discount: 43,
+    basePrice: 69,
+    displayPrice: 79,
+    originalPrice: 109,
+    discount: 28,
     images: [""],
     media: [
       { type: "image", src: "/badge-collection/round-magnet-badge/round-magnet-badges-1.webp" },
@@ -282,10 +312,10 @@ const rawProductsData: Omit<Product, "sku">[] = [
     id: "4",
     name: "Square Pin Badge",
     slug: "square-pin-badge",
-    basePrice: 29,
-    displayPrice: 39,
-    originalPrice: 69,
-    discount: 43,
+    basePrice: 59,
+    displayPrice: 69,
+    originalPrice: 99,
+    discount: 30,
     images: [""],
     media: [
       { type: "image", src: "/badge-collection/square-pin-badge/squre-pin-badges-1.webp" },
@@ -333,10 +363,10 @@ const rawProductsData: Omit<Product, "sku">[] = [
     id: "5",
     name: "Square Magnet Badge",
     slug: "square-magnet-badge",
-    basePrice: 29,
-    displayPrice: 39,
-    originalPrice: 69,
-    discount: 43,
+    basePrice: 69,
+    displayPrice: 79,
+    originalPrice: 109,
+    discount: 28,
     images: [""],
     media: [{ type: "image", src: "/badge-collection/square-magnet-badge/squre-magnet-badges-1.webp" },
       { type: "image", src: "/badge-collection/square-magnet-badge/squre-magnet-badges-2.webp" },
@@ -382,10 +412,10 @@ const rawProductsData: Omit<Product, "sku">[] = [
     id: "6",
     name: "Rectangle Pin Badge",
     slug: "rectangle-pin-badge",
-    basePrice: 29,
-    displayPrice: 39,
-    originalPrice: 69,
-    discount: 43,
+    basePrice: 59,
+    displayPrice: 69,
+    originalPrice: 99,
+    discount: 30,
     images: [""],
     media: [{ type: "image", src: "/badge-collection/rectangle-pin-badges/rectangle-badge-1.webp" },
       { type: "image", src: "/badge-collection/rectangle-pin-badges/rectangle-badge-2.webp" }
@@ -429,10 +459,10 @@ const rawProductsData: Omit<Product, "sku">[] = [
     id: "7",
     name: "Rectangle Magnet Badge",
     slug: "rectangle-magnet-badge",
-    basePrice: 29,
-    displayPrice: 39,
-    originalPrice: 69,
-    discount: 43,
+    basePrice: 69,
+    displayPrice: 79,
+    originalPrice: 109,
+    discount: 28,
     images: [""],
     media: [
       { type: "image", src: "/badge-collection/rectangle-magnet-badge/rectangle-magnet-badges-1.webp" },
@@ -486,6 +516,8 @@ function attachSkus(products: Omit<Product, "sku">[]): Product[] {
     return {
       ...p,
       sku: productSku,
+      qtyTiers: BADGE_QTY_TIERS,
+      minUnitPrice: 0,
       colors: p.colors?.map((c) => ({
         ...c,
         sku: `${productSku}-${c.label.toUpperCase().replace(/\s+/g, "")}`,

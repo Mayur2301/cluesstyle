@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getPool } from "@/app/lib/db";
-import { findProductBySlug } from "@/app/lib/product-catalog";
+import { findProductBySlug, resolveBaseUnitPrice } from "@/app/lib/product-catalog";
 import { computeOrderTotal, computeEmbroideryCharge, computeDtfCharge, type DeliveryType, type PrintSide } from "@/app/lib/pricing";
 import { createRazorpayOrder } from "@/app/lib/razorpay";
 import { generateOrderRef } from "@/app/lib/order-ref";
@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
       quantity,
       selectedSize,
       selectedColor,
+      designMode,
       deliveryType,
       paymentMode,
       customer,
@@ -109,6 +110,8 @@ export async function POST(req: NextRequest) {
       quantity?: number;
       selectedSize?: string | null;
       selectedColor?: string | null;
+      // "plan" (plain) | "custom" (custom print) — tote bags price differently.
+      designMode?: string | null;
       deliveryType?: string;
       // "cod" charges only a 5% confirmation amount via Razorpay now, with
       // the rest collected in cash on delivery. Anything else (including
@@ -528,8 +531,13 @@ export async function POST(req: NextRequest) {
     // Server-side pricing
     // ----------------------------------------------------
 
+    const baseUnitPrice = resolveBaseUnitPrice(product, selectedSize, designMode);
+    if (baseUnitPrice == null) {
+      return NextResponse.json({ error: `Please select a valid size and fabric for ${product.name}.` }, { status: 400 });
+    }
+
     const { pricePerUnit } = computeOrderTotal({
-      displayPrice: product.displayPrice,
+      displayPrice: baseUnitPrice,
       quantity: qty,
       deliveryType: "standard", // get base price only
       // Category-specific bulk tiers if this product defines its own (e.g.
@@ -538,6 +546,9 @@ export async function POST(req: NextRequest) {
       // price it showed the customer, or falls back to pricing.ts's global
       // default for categories that haven't defined their own yet.
       tiers: product.qtyTiers,
+      // Per-category price floor (badges) — undefined for every other
+      // category, which keeps pricing.ts's default floor.
+      minUnitPrice: product.minUnitPrice,
     });
 
     // Must match the client's calculation exactly (see ProductDetailClient.tsx /

@@ -18,6 +18,7 @@
 import { productsData as oversizedProducts } from "@/app/lib/oversized-products";
 import { productsData as soloPoloNeckProducts } from "@/app/lib/solid-polo-neck";
 import { productsData as toteBagProducts } from "@/app/lib/tote-bag-collection";
+import { isToteSlug, parseToteSelection, resolveToteVariantPrice } from "@/app/lib/tote-bag-pricing";
 import { productsData as roundNeckProducts } from "@/app/lib/round-neck-tshirt";
 import { productsData as hoodieProducts } from "@/app/lib/hoodies-collection";
 import { productsData as badgeProducts } from "@/app/lib/badge-collection";
@@ -48,6 +49,9 @@ export interface CatalogProduct {
   // table instead of pricing.ts's global default — it's what the product
   // page actually showed the customer.
   qtyTiers?: { minQty: number; maxQty: number; discount: number; label: string }[];
+  // Lowest per-unit price this category may be sold at; omit to use pricing.ts's
+  // default floor. See getPricePerUnit in pricing.ts.
+  minUnitPrice?: number;
   [key: string]: unknown; // category files carry extra fields we don't need here
 }
 
@@ -95,4 +99,25 @@ export function findProductBySlug(slug: string): CatalogProduct | null {
   );
 
   return null;
+}
+/**
+ * Base per-unit price (before bulk discount) for the exact variant the
+ * shopper chose. Most categories have one flat `displayPrice`; tote bags
+ * price by size + GSM + Plain/Custom Print (tote-bag-pricing.ts), exactly as
+ * the product page does. Returns null when a variant-priced product's
+ * selection can't be resolved, so the caller can reject the order.
+ */
+export function resolveBaseUnitPrice(
+  product: CatalogProduct,
+  selectedSize: string | null | undefined,
+  designMode: string | null | undefined
+): number | null {
+  if (!isToteSlug(product.slug)) return product.displayPrice;
+  const { sizeKey, gsm } = parseToteSelection(selectedSize);
+  const price = resolveToteVariantPrice(product.slug, {
+    sizeKey,
+    gsm,
+    designMode: designMode === "custom" ? "custom" : "plan",
+  });
+  return price ? price.sale : null;
 }

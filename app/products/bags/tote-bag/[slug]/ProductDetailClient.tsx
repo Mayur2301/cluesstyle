@@ -25,6 +25,13 @@ import {
   EMBROIDERY_DESIGN_CHARGE_FREE_MIN_QTY,
 } from "@/app/lib/pricing";
 import { addToCart } from "@/app/lib/cart";
+import {
+  TOTE_BAG_QTY_TIERS as SHEET_TOTE_QTY_TIERS,
+  TOTE_MIN_UNIT_PRICE,
+  TOTE_SIZE_OPTION_TO_KEY,
+  getToteQtyTiers,
+  resolveToteVariantPrice,
+} from "@/app/lib/tote-bag-pricing";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -799,15 +806,7 @@ const ORDER_TYPE_INFO: Record<"single" | "bulk", { title: string; subtitle: stri
 // tuned here without touching the shared table other product pages rely on.
 // Passed explicitly into getPricePerUnit/getDiscountForQty/computeOrderTotal
 // below so the price actually charged always matches what these cards show.
-const TOTE_BAG_QTY_TIERS: QtyTier[] = [
-  { minQty: 4, maxQty: 9, discount: 0, label: "4-9" },
-  { minQty: 10, maxQty: 29, discount: 5, label: "10-29" },
-  { minQty: 30, maxQty: 49, discount: 10, label: "30-49" },
-  { minQty: 50, maxQty: 59, discount: 15, label: "50-59" },
-  { minQty: 60, maxQty: 79, discount: 18, label: "60-79" },
-  { minQty: 80, maxQty: 99, discount: 22, label: "80-99" },
-  { minQty: 100, maxQty: Infinity, discount: 27, label: "100+" },
-];
+const TOTE_BAG_QTY_TIERS: QtyTier[] = SHEET_TOTE_QTY_TIERS;
 
 // Restored the "Single Piece vs Bulk Order" toggle (per user request) —
 // the bulk price-tier cards only render once "Bulk Order" is selected.
@@ -818,10 +817,10 @@ const TOTE_BAG_QTY_TIERS: QtyTier[] = [
 // computeOrderTotal all take this same table explicitly wherever they're
 // called (here and in the main component below) so the price actually
 // charged always matches what these cards show.
-function QuantityTierSelector({ displayPrice, quantity, setQuantity, onOpenSizes, stepNumber = 3 }: {
-  displayPrice: number; quantity: number; setQuantity: (q: number) => void; onOpenSizes?: () => void; stepNumber?: number;
+function QuantityTierSelector({ displayPrice, quantity, setQuantity, onOpenSizes, stepNumber = 3, tiers = TOTE_BAG_QTY_TIERS }: {
+  displayPrice: number; quantity: number; setQuantity: (q: number) => void; onOpenSizes?: () => void; stepNumber?: number; tiers?: QtyTier[];
 }) {
-  const bulkMinQty = TOTE_BAG_QTY_TIERS[0]?.minQty ?? 2;
+  const bulkMinQty = tiers[0]?.minQty ?? 2;
   const singleMaxQty = bulkMinQty - 1;
   const [orderMode, setOrderMode] = useState<"single" | "bulk">(quantity >= bulkMinQty ? "bulk" : "single");
   const [orderInfoOpen, setOrderInfoOpen] = useState<"single" | "bulk" | null>(null);
@@ -846,8 +845,8 @@ function QuantityTierSelector({ displayPrice, quantity, setQuantity, onOpenSizes
     setInputVal(String(next));
   };
 
-  const activeTier = TOTE_BAG_QTY_TIERS.reduce((acc, t) => (quantity >= t.minQty ? t : acc), TOTE_BAG_QTY_TIERS[0]);
-  const activeTierIndex = TOTE_BAG_QTY_TIERS.findIndex((t) => t.minQty === activeTier.minQty);
+  const activeTier = tiers.reduce((acc, t) => (quantity >= t.minQty ? t : acc), tiers[0]);
+  const activeTierIndex = tiers.findIndex((t) => t.minQty === activeTier.minQty);
 
   // If a manually typed quantity lands on a tier that's currently hidden
   // (beyond the visible mobile count), auto-expand so it's shown & highlighted.
@@ -855,12 +854,12 @@ function QuantityTierSelector({ displayPrice, quantity, setQuantity, onOpenSizes
     if (activeTierIndex >= VISIBLE_TIER_COUNT) setShowAllTiers(true);
   }, [activeTierIndex]);
 
-  const visibleTiers = showAllTiers ? TOTE_BAG_QTY_TIERS : TOTE_BAG_QTY_TIERS.slice(0, VISIBLE_TIER_COUNT);
-  const hiddenTiers = TOTE_BAG_QTY_TIERS.slice(VISIBLE_TIER_COUNT);
+  const visibleTiers = showAllTiers ? tiers : tiers.slice(0, VISIBLE_TIER_COUNT);
+  const hiddenTiers = tiers.slice(VISIBLE_TIER_COUNT);
 
   const renderTierCard = (tier: QtyTier) => {
     const isCurrent = activeTier.minQty === tier.minQty;
-    const price = getPricePerUnit(displayPrice, tier.minQty, TOTE_BAG_QTY_TIERS);
+    const price = getPricePerUnit(displayPrice, tier.minQty, tiers, TOTE_MIN_UNIT_PRICE);
     return (
       <button
         key={tier.minQty}
@@ -1110,9 +1109,9 @@ function QuantityTierSelector({ displayPrice, quantity, setQuantity, onOpenSizes
           {/* Desktop: all tiers shown in one row */}
           <div
             className="hidden sm:grid gap-2 sm:gap-3"
-            style={{ gridTemplateColumns: `repeat(${TOTE_BAG_QTY_TIERS.length}, minmax(0, 1fr))` }}
+            style={{ gridTemplateColumns: `repeat(${tiers.length}, minmax(0, 1fr))` }}
           >
-            {TOTE_BAG_QTY_TIERS.map(renderTierCard)}
+            {tiers.map(renderTierCard)}
 
             {onOpenSizes && (
               <button
@@ -1226,8 +1225,11 @@ function OrderModal({
   // breakdown, logo customization, etc). Omitted entirely for plain
   // size/color products, which keeps this fully backward compatible.
   sizeBreakdown, colorBreakdown, customizationNote, printType, fabricType, logoUrls,
-  logoLayers, logoUploadedUrls,
+  logoLayers, logoUploadedUrls, designMode, unitMrp,
 }: {
+  // Tote bags price Plain vs Custom Print differently; sent to the server so
+  // it can resolve the same variant price. unitMrp = MRP of the chosen variant.
+  designMode?: "plan" | "custom"; unitMrp?: number;
   product: Product; productImage: string; quantity: number; pricePerUnit: number; sameDayCharge: number;
   deliveryType: DeliveryType; selectedSize: string | null;
   selectedColor: string | null; loggedInUser: { name: string; email?: string; phone?: string } | null;
@@ -1306,7 +1308,7 @@ function OrderModal({
   const totalBeforeSurcharge = pricePerUnit * quantity + printCharge;
   const gstAmount = Math.round((totalBeforeSurcharge + sameDayCharge) * 0.05);
   const grandTotal = totalBeforeSurcharge + sameDayCharge + gstAmount;
-  const saved = (product.originalPrice - pricePerUnit) * quantity;
+  const saved = ((unitMrp ?? product.originalPrice) - pricePerUnit) * quantity;
 
   // Client-side estimate only, for display before the order is created —
   // the server always recomputes and enforces both of these authoritatively
@@ -1427,7 +1429,7 @@ function OrderModal({
         body: JSON.stringify({
           // When colorBreakdown is present, the server ignores selectedColor
           // entirely — it's still sent as a readable fallback/for logging.
-          productSlug: product.slug, quantity, selectedSize, selectedColor, deliveryType, paymentMode,
+          productSlug: product.slug, quantity, selectedSize, selectedColor, designMode, deliveryType, paymentMode,
           customer: { name: address.name, phone: address.phone, altPhone: address.altPhone || undefined, gstNumber: address.gstNumber || undefined, email: address.email },
           address: { line1: address.line1, line2: address.line2, city: address.city, state: address.state, pincode: address.pincode },
           pageUrl: typeof window !== "undefined" ? window.location.href : undefined,
@@ -4742,19 +4744,30 @@ const sizeAllocationComplete = !product.sizes || totalAllocated === numQty;
     ? product.colors?.find((c) => c.label.toLowerCase() === colorFromUrl.toLowerCase())
     : undefined;
   const cardColorLocked = Boolean(lockedCardColor);
-  const effectiveBasePrice = product.cardVariantPicker
-    ? selectedGsm?.price ?? selectedSizeOptionObj?.price ?? product.displayPrice
-    : product.simpleVariantPicker
-    ? selectedGsm?.price ?? product.displayPrice
-    : selectedSize && selectedVariantGsm != null
-    ? product.sizeDetails?.[selectedSize]?.gsmVariants?.[selectedVariantGsm]?.price ?? product.displayPrice
-    : product.displayPrice;
+  // Sheet pricing (tote-bag-pricing.ts): price depends on size + GSM +
+  // Plain ("plan") vs Custom Print ("custom"). The server resolves the very
+  // same table, so the amount shown here is the amount charged.
+  const toteSizeKey = product.cardVariantPicker
+    ? (selectedSizeOptionObj ? TOTE_SIZE_OPTION_TO_KEY[selectedSizeOptionObj.id] ?? null : null)
+    : selectedSize;
+  const toteGsm = product.cardVariantPicker || product.simpleVariantPicker
+    ? selectedGsm?.value ?? null
+    : selectedVariantGsm;
+  const toteVariantPrice = resolveToteVariantPrice(product.slug, {
+    sizeKey: toteSizeKey,
+    gsm: toteGsm,
+    designMode,
+  });
+  const effectiveBasePrice = toteVariantPrice?.sale ?? product.displayPrice;
+  const effectiveMrp = toteVariantPrice?.mrp ?? product.originalPrice;
+  const activeQtyTiers = product.qtyTiers ?? getToteQtyTiers(product.slug);
 
   const { pricePerUnit, sameDayCharge: staticSameDayCharge } = computeOrderTotal({
     displayPrice: effectiveBasePrice,
     quantity: numQty,
     deliveryType,
-    tiers: TOTE_BAG_QTY_TIERS,
+    tiers: activeQtyTiers,
+    minUnitPrice: TOTE_MIN_UNIT_PRICE,
   });
 
   // Same-day delivery is never charged up front — it's negotiated by
@@ -4776,7 +4789,7 @@ const sizeAllocationComplete = !product.sizes || totalAllocated === numQty;
   const dtfCharge = printType === "dtf" ? computeDtfCharge(numQty, activeLogoSides) : 0;
 
   const totalPrice = pricePerUnit * numQty + effectiveSameDayCharge + embroideryCharge + dtfCharge;
-  const discountPct = getDiscountForQty(numQty, TOTE_BAG_QTY_TIERS);
+  const discountPct = getDiscountForQty(numQty, activeQtyTiers);
   const activeOffer = product.offer ?? DEFAULT_OFFER;
 
 const handleAddToCart = () => {
@@ -4836,7 +4849,7 @@ const handleAddToCart = () => {
         ? [selectedSize, selectedVariantGsm ? `${selectedVariantGsm} GSM` : null].filter(Boolean).join(" — ")
         : null,
       sizeBreakdown: undefined,
-      color: selectedColor, deliveryType,
+      color: selectedColor, deliveryType, designMode,
       pricePerUnit, sameDayCharge: effectiveSameDayCharge,
       embroideryCharge: embroideryCharge || undefined,
       dtfCharge: dtfCharge || undefined,
@@ -4939,7 +4952,7 @@ const handleAddToCart = () => {
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[26px] sm:text-[28px] font-bold text-gray-900">{formatPrice(pricePerUnit)}</span>
-                    <span className="text-lg sm:text-xl text-gray-400 line-through">{formatPrice(product.originalPrice)}</span>
+                    <span className="text-lg sm:text-xl text-gray-400 line-through">{formatPrice(effectiveMrp)}</span>
                     {discountPct > 0 && (
                       <span className="text-[16px] sm:text-[18px] font-semibold text-green-600">{discountPct}% OFF</span>
                     )}
@@ -5000,7 +5013,7 @@ const handleAddToCart = () => {
                   banner (meant to entice exploring cheaper tiers) doesn't
                   apply the same way it does for products still choosing. */}
               {!colorStepHidden && (
-                <PriceOfferModal pricePerUnit={pricePerUnit} originalPrice={product.originalPrice} offer={activeOffer} />
+                <PriceOfferModal pricePerUnit={pricePerUnit} originalPrice={effectiveMrp} offer={activeOffer} />
               )}
             </div>
 
@@ -5105,7 +5118,7 @@ const handleAddToCart = () => {
                               {size.dimension}
                             </span>
                             <span className={`text-sm font-bold mt-1 ${isSelected ? "text-blue-600" : "text-gray-900"}`}>
-                              ₹{size.price}
+                              ₹{resolveToteVariantPrice(product.slug, { sizeKey: TOTE_SIZE_OPTION_TO_KEY[size.id] ?? null, gsm: selectedGsm?.value ?? null, designMode })?.sale ?? size.price}
                             </span>
                           </button>
                         );
@@ -5932,7 +5945,8 @@ const handleAddToCart = () => {
 
             {!product.simpleVariantPicker && (
             <QuantityTierSelector
-              displayPrice={product.displayPrice}
+              displayPrice={effectiveBasePrice}
+              tiers={activeQtyTiers}
               quantity={numQty}
               setQuantity={setQuantity}
               stepNumber={
@@ -5980,7 +5994,7 @@ const handleAddToCart = () => {
                   </div>
                   {discountPct > 0 && (
                     <p className="text-xs font-semibold text-green-600 mt-1 text-right sm:text-left">
-                      You save {formatPrice((product.displayPrice - pricePerUnit) * numQty)}
+                      You save {formatPrice((effectiveBasePrice - pricePerUnit) * numQty)}
                     </p>
                   )}
                 </div>
@@ -6249,6 +6263,8 @@ const handleAddToCart = () => {
     loggedInUser={loggedInUser}
     logoLayers={logoLayers}
     logoUploadedUrls={logoUploadedUrls}
+    designMode={designMode}
+    unitMrp={effectiveMrp}
     customizationNote={customizationNote}
     onClose={() => setShowOrderModal(false)}
   />

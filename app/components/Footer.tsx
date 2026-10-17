@@ -171,7 +171,7 @@ const socialIcons: { Icon: IconType; href: string; label: string; brandColor: st
 const trustBadges: { Icon: IconType; title: string; subtitle: string; bg: string; color: string }[] = [
   { Icon: FaTruck,       title: 'Fast Shipping',     subtitle: 'Pan India Delivery', bg: '#dbeafe', color: '#2563eb' },
   { Icon: FaCheckCircle, title: 'Secure Payments',   subtitle: '100% Safe & Secure', bg: '#d1fae5', color: '#059669' },
-  { Icon: FaBoxOpen,     title: 'Easy Returns',      subtitle: '15 Days Policy*',    bg: '#fef3c7', color: '#d97706' },
+  { Icon: FaBoxOpen,     title: 'Easy Returns',      subtitle: '7 Days Policy*',   bg: '#fef3c7', color: '#d97706' },
   { Icon: FaHeadset,     title: 'Dedicated Support', subtitle: 'Here to Help',       bg: '#fce7f3', color: '#db2777' },
 ];
 
@@ -278,7 +278,7 @@ export default function Footer() {
               style={{ borderColor: '#232733' }}
             >
               <FaSyncAlt className="text-[13px] flex-shrink-0" style={{ color: '#60a5fa' }} />
-              <span className="text-[12px] font-semibold" style={{ color: ACCENT }}>15 Days Return Policy*</span>
+              <span className="text-[12px] font-semibold" style={{ color: ACCENT }}>7 Days Return Policy*</span>
             </div>
           </div>
 

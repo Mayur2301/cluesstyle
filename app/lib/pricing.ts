@@ -233,10 +233,20 @@ export function getDiscountForQty(qty: number, tiers: QtyTier[] = QTY_TIERS): nu
  * page and create-razorpay-order, or the price shown and the price charged
  * will drift apart.
  */
-export function getPricePerUnit(displayPrice: number, qty: number, tiers: QtyTier[] = QTY_TIERS): number {
+export function getPricePerUnit(
+  displayPrice: number,
+  qty: number,
+  tiers: QtyTier[] = QTY_TIERS,
+  // Lowest price per unit this category may ever be sold at. Defaults to the
+  // apparel-based floor (COST_PER_UNIT + 20) so every existing category
+  // prices exactly as before; a low-priced category (e.g. badges, which sell
+  // at Rs.69-79 and would otherwise be clamped UP to Rs.260) passes its own
+  // via product.minUnitPrice — on BOTH the product page and the order APIs.
+  minUnitPrice: number = COST_PER_UNIT + 20
+): number {
   const discountPct = getDiscountForQty(qty, tiers);
   const discounted = displayPrice * (1 - discountPct / 100);
-  return Math.round(Math.max(discounted, COST_PER_UNIT + 20));
+  return Math.round(Math.max(discounted, minUnitPrice));
 }
 
 export function computeOrderTotal({
@@ -244,13 +254,15 @@ export function computeOrderTotal({
   quantity,
   deliveryType,
   tiers = QTY_TIERS,
+  minUnitPrice,
 }: {
   displayPrice: number;
   quantity: number;
   deliveryType: DeliveryType;
   tiers?: QtyTier[];
+  minUnitPrice?: number;
 }) {
-  const pricePerUnit = getPricePerUnit(displayPrice, quantity, tiers);
+  const pricePerUnit = getPricePerUnit(displayPrice, quantity, tiers, minUnitPrice);
   const sameDayCharge = deliveryType === "sameday" ? SAME_DAY_SURCHARGE * quantity : 0;
   const grandTotal = pricePerUnit * quantity + sameDayCharge;
   return { pricePerUnit, sameDayCharge, grandTotal };

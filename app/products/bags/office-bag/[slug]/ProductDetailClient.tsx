@@ -10,7 +10,7 @@ import CareInstructions from "@/app/components/warrenty";
 
 import RecentlyViewed from "@/app/components/RecentlyViewed";
 import ProductReviews from "@/app/components/ProductReviews";
-import { productsData, DEFAULT_OFFER, type Product, type MediaItem, type Offer, type FabricSubCategoryMap } from "@/app/lib/office-bag-collection";
+import { productsData, DEFAULT_OFFER, OFFICE_BAG_QTY_TIERS as SHARED_OFFICE_BAG_QTY_TIERS, type Product, type MediaItem, type Offer, type FabricSubCategoryMap } from "@/app/lib/office-bag-collection";
 import {
   COST_PER_UNIT,
   SAME_DAY_SURCHARGE,
@@ -701,24 +701,16 @@ const ORDER_TYPE_INFO: Record<"single" | "bulk", { title: string; subtitle: stri
 // tuned here without touching the shared table other product pages rely on.
 // Passed explicitly into getPricePerUnit/getDiscountForQty/computeOrderTotal
 // below so the price actually charged always matches what these cards show.
-const OFFICE_BAG_QTY_TIERS: QtyTier[] = [
-  { minQty: 2, maxQty: 9, discount: 0, label: "2-9" },
-  { minQty: 10, maxQty: 29, discount: 5, label: "10-29" },
-  { minQty: 30, maxQty: 49, discount: 10, label: "30-49" },
-  { minQty: 50, maxQty: 59, discount: 15, label: "50-59" },
-  { minQty: 60, maxQty: 79, discount: 18, label: "60-79" },
-  { minQty: 80, maxQty: 99, discount: 22, label: "80-99" },
-  { minQty: 100, maxQty: Infinity, discount: 27, label: "100+" },
-];
+// Single source of truth lives in app/lib/office-bag-collection.ts (also read by the order APIs).
+const OFFICE_BAG_QTY_TIERS: QtyTier[] = SHARED_OFFICE_BAG_QTY_TIERS;
 
 function QuantityTierSelector({ displayPrice, quantity, setQuantity, onOpenSizes, stepNumber = 3 }: {
   displayPrice: number; quantity: number; setQuantity: (q: number) => void; onOpenSizes?: () => void; stepNumber?: number;
 }) {
-  // bulkMinQty/singleMaxQty kept hardcoded (not derived from
-  // OFFICE_BAG_QTY_TIERS[0].minQty) — this matches office-bag's existing
-  // single/bulk toggle split from before this migration.
-  const bulkMinQty = 3;
-  const singleMaxQty = 2;
+  // Derived from the shared tier table: Bulk starts at the first tier (5),
+  // so Single Piece covers 1 up to one below that (1-4).
+  const bulkMinQty = OFFICE_BAG_QTY_TIERS[0]?.minQty ?? 5;
+  const singleMaxQty = bulkMinQty - 1;
   const [orderMode, setOrderMode] = useState<"single" | "bulk">(quantity >= bulkMinQty ? "bulk" : "single");
   const [orderInfoOpen, setOrderInfoOpen] = useState<"single" | "bulk" | null>(null);
   const [inputVal, setInputVal] = useState(String(quantity));
@@ -964,7 +956,7 @@ function QuantityTierSelector({ displayPrice, quantity, setQuantity, onOpenSizes
             
           </span>
           <span className="text-[10px] sm:text-[13px] font-semibold text-blue-900 leading-snug">
-            {orderMode === "single" ? <>Order 1–2 pieces<br /> switch to Bulk for lower pricing</> : <>Get lower price<br /> on higher quantity</>}
+            {orderMode === "single" ? <>Order 1–{singleMaxQty} pieces<br /> switch to Bulk for lower pricing</> : <>Get lower price<br /> on higher quantity</>}
           </span>
         </div>
       </div>
@@ -5493,11 +5485,11 @@ const handleAddToCart = () => {
       </main>
 
      <ProductReviews productType="polo-t-shirt" productSlug={product.slug} />
-
-      <CareInstructions />
+{/* 
+      <CareInstructions /> */}
 
       {/* Popular Searches */}
-      <section className="bg-white py-10 px-6 sm:px-6 md:px-15">
+      {/* <section className="bg-white py-10 px-6 sm:px-6 md:px-15">
         <div className="max-w-[1500px] mx-auto">
           <div className="mb-8 flex items-center gap-3">
             <img src="https://cdn.cluesstyle.com/public/gold-arrow.png" alt="arrow" className="w-7 h-7 sm:w-8 sm:h-8" />
@@ -5516,7 +5508,7 @@ const handleAddToCart = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* FAQ */}
       <section className="py-12 sm:py-16 bg-white">
@@ -5553,7 +5545,7 @@ const handleAddToCart = () => {
         </div>
       </section>
 
-      <RecentlyViewed />
+    
 
       {/* Size Guide Modal */}
       {showSizeGuide && (

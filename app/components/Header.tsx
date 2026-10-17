@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback, Fragment } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   FaHeart, FaShoppingCart, FaUser,
   FaSearch, FaBars, FaTimes,
@@ -28,7 +28,7 @@ interface FeatCard { title: string; description: string; tag: string; href: stri
 interface MenuData {
   categories: Category[];
   featured: FeatCard[];
-  cta: { browse: string; browseLabel: string; design: string; designLabel: string };
+  cta: { browse: string; browseLabel: string; design: string; designLabel: string; designComingSoon?: boolean };
 }
 
 // Where a `comingSoon` category/sub-item's click actually goes — the real
@@ -215,7 +215,7 @@ const megaMenus: Record<string, MenuData> = {
         emoji: '🎯',
       },
     ],
-    cta: { browse: '/shop', browseLabel: 'Browse All Products', design: '/customized-your-t-shirt', designLabel: 'Design Your Own' },
+    cta: { browse: '/products', browseLabel: 'Browse All Products', design: '/customized-your-t-shirt', designLabel: 'Design Your Own', designComingSoon: true },
   },
 
   // 'Same Day Delivery': {
@@ -305,7 +305,7 @@ const megaMenus: Record<string, MenuData> = {
       { title: 'LIMITED EDITION', description: 'Rare and limited stock items.', tag: 'Exclusive', href: '/shop/limited', emoji: '🌟' },
       { title: 'NEW ARRIVALS', description: 'Fresh styles added every week.', tag: 'New', href: '/shop/collections#new', emoji: '🆕' },
     ],
-    cta: { browse: '/shop/collections', browseLabel: 'All Apparel', design: '/customized-your-t-shirt', designLabel: 'Design Your Own' },
+    cta: { browse: '/shop/collections', browseLabel: 'All Apparel', design: '/customized-your-t-shirt', designLabel: 'Design Your Own', designComingSoon: true },
   },
 
   'Events & Sponsors': {
@@ -459,8 +459,12 @@ function MegaMenuPanel({ menuKey, onMouseEnter, onMouseLeave }: {
             <Link href={data.cta.browse} className={`${styles.megaBtn} ${styles.megaBtnOutline}`}>
               {data.cta.browseLabel} <FaArrowRight />
             </Link>
-            <Link href={data.cta.design} className={`${styles.megaBtn} ${styles.megaBtnSolid}`}>
-              {data.cta.designLabel} <FaArrowRight />
+            <Link
+              href={data.cta.designComingSoon ? comingSoonHref(data.cta.designLabel, data.cta.design) : data.cta.design}
+              className={`${styles.megaBtn} ${styles.megaBtnSolid} ${data.cta.designComingSoon ? styles.megaBtnSoon : ''}`}
+            >
+              {data.cta.designLabel}
+              {data.cta.designComingSoon ? <span className={styles.soonBadge}>Listing Soon</span> : <FaArrowRight />}
             </Link>
           </div>
         </div>
@@ -663,8 +667,12 @@ function MobileMenu({ open, onClose, cartCount, wishlistCount, onBulkOrder }: {
         </div>
 
         <div className={styles.mobileDrawerFooter}>
-          <Link href="/customized-your-t-shirt" className={styles.mobileDesignBtn} onClick={onClose}>
-            Design Your Own
+          <Link
+            href={comingSoonHref('Design Your Own', '/customized-your-t-shirt')}
+            className={`${styles.mobileDesignBtn} ${styles.mobileDesignBtnSoon}`}
+            onClick={onClose}
+          >
+            Design Your Own <span className={styles.soonBadge}>Soon</span>
           </Link>
         </div>
       </div>
@@ -674,13 +682,70 @@ function MobileMenu({ open, onClose, cartCount, wishlistCount, onBulkOrder }: {
 
 // ─── Main Header ──────────────────────────────────────────────────────────────
 
+// ─── Search ───────────────────────────────────────────────────────────────────
+// Suggestions are built from the "All Products" mega menu above, so search
+// and navigation can never disagree: anything flagged `comingSoon` (itself,
+// or via its whole category) is left out, and going live later only means
+// removing that flag. Extra words per category let "t-shirt", "tshirt" or
+// "tee" surface every apparel item, not just ones with that word in the name.
+const SEARCH_KEYWORDS: Record<string, string> = {
+  'Apparel':         't-shirt tshirt tee shirt clothing wear apparel',
+  'Bag Collections': 'bag bags backpack laptop carry',
+  'Pin Batches':     'badge badges batch pin magnet button',
+};
+
+interface SearchEntry { label: string; href: string; group: string; hay: string; kw: string }
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const searchIndex: SearchEntry[] = (() => {
+  const out: SearchEntry[] = [];
+  for (const cat of megaMenus['All Products'].categories) {
+    if (cat.comingSoon) continue;
+    const kw = norm(`${cat.label} ${SEARCH_KEYWORDS[cat.label] ?? ''}`);
+    out.push({ label: cat.label, href: cat.href, group: 'Category', hay: norm(cat.label), kw });
+    for (const sub of cat.children ?? []) {
+      if (sub.comingSoon || sub.href === cat.href || sub.label.startsWith('Visit ')) continue;
+      out.push({ label: sub.label, href: sub.href, group: cat.label, hay: norm(sub.label), kw });
+    }
+  }
+  return out;
+})();
+
+function searchProducts(query: string, limit = 8): SearchEntry[] {
+  const q = norm(query);
+  if (q.length < 2) return [];
+  // "tshirts" should still find "tshirt".
+  const forms = q.length > 3 && q.endsWith('s') ? [q, q.slice(0, -1)] : [q];
+  const scored: { e: SearchEntry; s: number }[] = [];
+  for (const e of searchIndex) {
+    let s = -1;
+    if (forms.some((f) => e.hay.startsWith(f))) s = 0;
+    else if (forms.some((f) => e.hay.includes(f))) s = 1;
+    else if (forms.some((f) => e.kw.includes(f))) s = 2;
+    if (s >= 0) scored.push({ e, s });
+  }
+  // Stable sort keeps menu order within the same relevance.
+  return scored.sort((a, b) => a.s - b.s).slice(0, limit).map((x) => x.e);
+}
+
 export default function Header() {
   const [activeMenu,  setActiveMenu]  = useState<string | null>(null);
   const [mobileOpen,  setMobileOpen]  = useState(false);
   const [searchOpen,  setSearchOpen]  = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchActive, setSearchActive] = useState(-1);
+  const router = useRouter();
+  const suggestions = searchProducts(searchQuery);
 
-  const timerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const goToSuggestion = (href: string) => {
+    setSearchOpen(false);
+    setSearchQuery('');
+    setSearchActive(-1);
+    router.push(href);
+  };
+
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const [bulkModalOpen,    setBulkModalOpen]    = useState(false);
@@ -853,9 +918,22 @@ useEffect(() => {
               type="text"
               placeholder="Search products, services, collections…"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setSearchActive(-1); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setSearchActive((i) => (suggestions.length ? (i + 1) % suggestions.length : -1));
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setSearchActive((i) => (suggestions.length ? (i <= 0 ? suggestions.length - 1 : i - 1) : -1));
+                } else if (e.key === 'Enter' && suggestions.length) {
+                  e.preventDefault();
+                  goToSuggestion(suggestions[searchActive >= 0 ? searchActive : 0].href);
+                }
+              }}
               className={styles.csSearchInput}
               aria-label="Search"
+              autoComplete="off"
             />
             <button
               className={styles.csSearchClose}
@@ -866,6 +944,31 @@ useEffect(() => {
             </button>
           </div>
         </div>
+
+        {/* Search suggestions — outside .csSearchBar, which clips overflow */}
+        {searchOpen && norm(searchQuery).length >= 2 && (
+          <div className={styles.csSuggest} role="listbox">
+            {suggestions.length > 0 ? (
+              suggestions.map((s, i) => (
+                <button
+                  key={s.href + s.label}
+                  type="button"
+                  role="option"
+                  aria-selected={i === searchActive}
+                  className={`${styles.csSuggestItem} ${i === searchActive ? styles.csSuggestItemActive : ''}`}
+                  onMouseEnter={() => setSearchActive(i)}
+                  onClick={() => goToSuggestion(s.href)}
+                >
+                  <FaSearch className={styles.csSuggestIcon} />
+                  <span className={styles.csSuggestLabel}>{s.label}</span>
+                  <span className={styles.csSuggestGroup}>{s.group}</span>
+                </button>
+              ))
+            ) : (
+              <div className={styles.csSuggestEmpty}>No products found for &ldquo;{searchQuery}&rdquo;</div>
+            )}
+          </div>
+        )}
 
         {/* Mega menu */}
         {activeMenu && (

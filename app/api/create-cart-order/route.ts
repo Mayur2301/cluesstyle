@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getPool } from "@/app/lib/db";
-import { findProductBySlug } from "@/app/lib/product-catalog";
+import { findProductBySlug, resolveBaseUnitPrice } from "@/app/lib/product-catalog";
 import {
   computeOrderTotal,
   computeEmbroideryCharge,
@@ -71,6 +71,8 @@ interface CartItemInput {
   quantity?: number;
   selectedSize?: string | null;
   selectedColor?: string | null;
+  // "plan" | "custom" — tote bags price Plain vs Custom Print differently.
+  designMode?: string | null;
   sizeBreakdown?: Record<string, number>;
   deliveryType?: string;
   customization?: CartItemCustomizationInput;
@@ -298,11 +300,19 @@ export async function POST(req: NextRequest) {
       const dtfCharge =
         cleanCustomization?.printType === "dtf" ? computeDtfCharge(qty, activePrintSides) : 0;
 
+      const baseUnitPrice = resolveBaseUnitPrice(product, raw.selectedSize, raw.designMode);
+      if (baseUnitPrice == null) {
+        return NextResponse.json({ error: `Please re-select the size and fabric for ${product.name}.` }, { status: 400 });
+      }
+
       const { pricePerUnit } = computeOrderTotal({
-        displayPrice: product.displayPrice,
+        displayPrice: baseUnitPrice,
         quantity: qty,
         deliveryType: "standard",
         tiers: product.qtyTiers,
+      // Per-category price floor (badges) — undefined for every other
+      // category, which keeps pricing.ts's default floor.
+      minUnitPrice: product.minUnitPrice,
       });
 
       const itemSubtotal = pricePerUnit * qty + embroideryCharge + dtfCharge;

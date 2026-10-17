@@ -32,6 +32,9 @@ export interface CartItem {
   size: string | null;
   sizeBreakdown?: Record<string, number>;
   color: string | null;
+  // Tote bags only: "plan" (plain) vs "custom" (custom print) — the server
+  // needs it to price the line. Omitted for every other product.
+  designMode?: "plan" | "custom";
   deliveryType: DeliveryType;
   // Base price per unit ONLY (no embroidery/DTF/same-day) — same meaning
   // as before. Use embroideryCharge/dtfCharge below for those.
@@ -101,6 +104,7 @@ export function addToCart(item: CartItem): CartItem[] {
           c.productId === item.productId &&
           c.size === item.size &&
           c.color === item.color &&
+          c.designMode === item.designMode &&
           c.deliveryType === item.deliveryType
       );
 

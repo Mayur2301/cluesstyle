@@ -7,6 +7,10 @@ import EmailVerification from '../components/EmailVerification';
 
 type UserType = 'user' | 'reseller' | 'club' | 'sponsor';
 
+// Account types that can currently be used. Add a type here (e.g. 'reseller')
+// when it launches and it becomes selectable automatically.
+const AVAILABLE_TYPES: UserType[] = ['user'];
+
 export default function AccountPage() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
@@ -39,6 +43,9 @@ export default function AccountPage() {
 
   // ✅ FIX 1: Single handler that updates BOTH selectedType and the active form's userType
   const handleTypeSelect = (type: UserType) => {
+    // Only the Regular User account is open for now — the other types are
+    // shown greyed out with an "Available soon" badge.
+    if (!AVAILABLE_TYPES.includes(type)) return;
     setSelectedType(type);
     if (isLogin) {
       setLoginForm(prev => ({ ...prev, userType: type }));
@@ -193,24 +200,54 @@ export default function AccountPage() {
           </div>
 
           <div className={styles.typeList}>
-            {userTypes.map((type) => (
-              <button
-                key={type.value}
-                type="button"
-                onClick={() => handleTypeSelect(type.value as UserType)}
-                className={`${styles.typeCard} ${selectedType === type.value ? styles.typeCardActive : ''}`}
-                aria-pressed={selectedType === type.value}
-              >
-                <span className={styles.typeGlyph}>{type.glyph}</span>
-                <span className={styles.typeIcon}>
-                  <img src={type.icon} alt="" />
-                </span>
-                <span className={styles.typeText}>
-                  <span className={styles.typeLabel}>{type.label}</span>
-                  <span className={styles.typeDesc}>{type.description}</span>
-                </span>
-              </button>
-            ))}
+            {userTypes.map((type) => {
+              const available = AVAILABLE_TYPES.includes(type.value as UserType);
+              return (
+                <button
+                  key={type.value}
+                  type="button"
+                  onClick={() => handleTypeSelect(type.value as UserType)}
+                  disabled={!available}
+                  className={`${styles.typeCard} ${selectedType === type.value ? styles.typeCardActive : ''}`}
+                  aria-pressed={selectedType === type.value}
+                  aria-disabled={!available}
+                  style={
+                    available
+                      ? undefined
+                      : { position: 'relative', opacity: 0.5, filter: 'grayscale(1)', cursor: 'not-allowed' }
+                  }
+                >
+                  <span className={styles.typeGlyph}>{type.glyph}</span>
+                  <span className={styles.typeIcon}>
+                    <img src={type.icon} alt="" />
+                  </span>
+                  <span className={styles.typeText}>
+                    <span className={styles.typeLabel}>{type.label}</span>
+                    <span className={styles.typeDesc}>{type.description}</span>
+                  </span>
+                  {!available && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        background: 'rgba(255,255,255,0.92)',
+                        color: '#111827',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        letterSpacing: '0.03em',
+                        textTransform: 'uppercase',
+                        filter: 'none',
+                      }}
+                    >
+                      Available soon
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </aside>
 

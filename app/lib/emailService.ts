@@ -1,5 +1,5 @@
 // PATH: app/lib/emailService.ts
-import nodemailer from 'nodemailer';
+import { mailTransporter, MAIL_FROM_ADDRESS } from './mail-transport';
 // Was creating its own separate `mysql.createPool()` here, on top of the
 // shared pool in app/lib/db.ts — every module that did this opened its own
 // extra 10-connection pool, and all of them together were a major
@@ -9,15 +9,7 @@ import { getPool } from './db';
 
 const pool = getPool();
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+const transporter = mailTransporter;
 
 export class EmailOTPService {
   private static generateOTP(): string {
@@ -85,7 +77,7 @@ export class EmailOTPService {
       `;
 
       await transporter.sendMail({
-        from: `"CluesStyle" <${process.env.EMAIL_USER}>`,
+        from: `"CluesStyle" <${MAIL_FROM_ADDRESS}>`,
         to: email,
         subject: 'Email Verification - CluesStyle',
         html: htmlTemplate,

@@ -1,5 +1,8 @@
 // ── Types ──────────────────────────────────────────────────────────────────────
 
+import type { QtyTier } from "@/app/lib/pricing";
+import { getToteQtyTiers, TOTE_MIN_UNIT_PRICE } from "@/app/lib/tote-bag-pricing";
+
 export interface MediaItem {
   type: "image" | "video";
   src: string;
@@ -154,6 +157,10 @@ export interface Product {
   slug: string;
   sku: string;
   basePrice: number;
+  // Per-category bulk tiers + price floor — attached by attachSkus() from
+  // tote-bag-pricing.ts and read by BOTH the product page and the order APIs.
+  qtyTiers?: QtyTier[];
+  minUnitPrice?: number;
   displayPrice: number;
   originalPrice: number;
   images: string[];
@@ -285,7 +292,13 @@ function attachSkus(raw: RawProduct[]): Product[] {
       ...c,
       sku: `${productSku}-${colorCode(c.label)}`,
     }));
-    return { ...p, sku: productSku, ...(colors ? { colors } : {}) } as Product;
+    return {
+      ...p,
+      sku: productSku,
+      qtyTiers: getToteQtyTiers(p.slug),
+      minUnitPrice: TOTE_MIN_UNIT_PRICE,
+      ...(colors ? { colors } : {}),
+    } as Product;
   });
 }
 
@@ -306,9 +319,9 @@ const rawProductsData: RawProduct[] = [
     // breakdown — just color, fabric GSM, quantity, and an order button.
     simpleVariantPicker: true,
     basePrice: 540,
-    displayPrice: 599, // baseline (150 GSM) price — 330 GSM overrides via gsmOptions below
-    originalPrice: 999,
-    discount: 40,
+    displayPrice: 600, // baseline (150 GSM) price — 330 GSM (₹1400) overrides via gsmOptions below
+    originalPrice: 900,
+    discount: 33,
     images: [""],
     media: [
       { type: "image", src: "/tote-bag-collection/sample-kit-tote-bag-1.webp" },
@@ -366,14 +379,14 @@ const rawProductsData: RawProduct[] = [
         label: "Lightweight",
         features: ["Light & Easy to Carry", "Economical Choice", "Promotions Use"],
         image: "/tote-bag-collection/premium-100-cotton.webp",
-        // no `price` override — uses the product's own displayPrice (₹599)
+        price: 600, // 150 GSM kit  (MRP ₹900)
       },
       {
         value: 330,
         label: "Heavy & Premium",
         features: ["Thicker & Extra Strong", "Reusable Fabric", "Branding Use"],
         image: "/tote-bag-collection/premium-100-cotton.webp",
-        price: 699, // premium fabric costs more
+        price: 1400, // 330 GSM kit (MRP ₹2100)
       },
     ],
     // No `sizes` here — this is a single fixed-size sample kit.
@@ -390,9 +403,9 @@ const rawProductsData: RawProduct[] = [
     isDefaultCategory: true,
     cardVariantPicker: true,
     basePrice: 180,
-    displayPrice: 199, // baseline (Small size) price — other sizes override via sizeOptions below
-    originalPrice: 349,
-    discount: 43,
+    displayPrice: 150, // baseline (Small, 150 GSM, plain) price — real price comes from tote-bag-pricing.ts
+    originalPrice: 230,
+    discount: 35,
     images: [""],
     media: [
       { type: "image", src: "/tote-bag-collection/customize1.webp" },
@@ -417,7 +430,7 @@ const rawProductsData: RawProduct[] = [
         id: "small",
         label: "Small",
         dimension: "12 x 14 inch",
-        price: 199,
+        price: 150,
         image: "/tote-bag-collection/150gsm-natural-tote-bag/natural-150GSM-small-1.webp",
         variantImages: {
           "Natural:150": "/tote-bag-collection/150gsm-natural-tote-bag/natural-150GSM-small-1.webp",
@@ -430,7 +443,7 @@ const rawProductsData: RawProduct[] = [
         id: "medium",
         label: "Medium",
         dimension: "14 x 16 inch",
-        price: 219,
+        price: 160,
         image: "/tote-bag-collection/150gsm-natural-tote-bag/natural-150GSM-medium-2.webp",
         popular: true,
         variantImages: {
@@ -444,7 +457,7 @@ const rawProductsData: RawProduct[] = [
         id: "large",
         label: "Large",
         dimension: "16 x 18 inch",
-        price: 249,
+        price: 170,
         image: "/tote-bag-collection/150gsm-natural-tote-bag/natural-150GSM-large-3.webp",
         variantImages: {
           "Natural:150": "/tote-bag-collection/150gsm-natural-tote-bag/natural-150GSM-large-3.webp",
@@ -457,7 +470,7 @@ const rawProductsData: RawProduct[] = [
         id: "xl",
         label: "XL",
         dimension: "18 x 20 inch",
-        price: 279,
+        price: 170,
         image: "/tote-bag-collection/150gsm-natural-tote-bag/natural-150GSM-extra-large-4.webp",
         variantImages: {
           "Natural:150": "/tote-bag-collection/150gsm-natural-tote-bag/natural-150GSM-extra-large-4.webp",
@@ -530,14 +543,14 @@ const rawProductsData: RawProduct[] = [
         label: "Lightweight",
         features: ["Light & Easy to Carry", "Economical Choice", "Promotions Use"],
         image: "/tote-bag-collection/premium-100-cotton.webp",
-        // no `price` override — uses the selected size's own price
+        // no `price` override — price comes from tote-bag-pricing.ts (size + GSM + Plain/Custom)
       },
       {
         value: 330,
         label: "Heavy & Premium",
         features: ["Thicker & Extra Strong", "Reusable Fabric", "Branding Use"],
         image: "/tote-bag-collection/premium-100-cotton.webp",
-        price: 699, // premium fabric costs more, overrides the size price when selected
+        // no `price` override — see tote-bag-pricing.ts
       },
     ],
     // "4. Customized" — Plan (I'll design later) vs Customized (add your own
@@ -573,9 +586,9 @@ const rawProductsData: RawProduct[] = [
     slug: "natural-canvas-tote-bag",
     isDefaultCategory: true,
     basePrice: 180,
-    displayPrice: 199,
-    originalPrice: 349,
-    discount: 43,
+    displayPrice: 150,
+    originalPrice: 230,
+    discount: 35,
     images: [""],
     media: [
       { type: "image", src: "/tote-bag-collection/330gsm/natural-330-gsm-bg.webp" },
@@ -700,7 +713,7 @@ const rawProductsData: RawProduct[] = [
           },
           330: {
             image: "/tote-bag-collection/330gsm-natural-tote-bag/natural-330GSM-extra-large-4.webp",
-            price: 249, // kept from your original — example of a size+GSM combo costing more
+            price: 210, // 18x20 / 330 GSM plain — see tote-bag-pricing.ts
             blankMedia: [
               { type: "image", src: "/tote-bag-collection/natural-tote-bag-bg.webp" },
               { type: "image", src: "/tote-bag-collection/natural-tote-bag-bg.webp" },
@@ -729,9 +742,9 @@ const rawProductsData: RawProduct[] = [
     slug: "black-canvas-tote-bag",
     isDefaultCategory: true,
     basePrice: 180,
-    displayPrice: 199,
-    originalPrice: 349,
-    discount: 43,
+    displayPrice: 150,
+    originalPrice: 230,
+    discount: 35,
     images: [""],
    media: [
       { type: "image", src: "/tote-bag-collection/black/330-gsm/black-330-gsm-bg.webp" },
@@ -853,7 +866,7 @@ const rawProductsData: RawProduct[] = [
           },
           330: {
             image: "/tote-bag-collection/black/330-gsm/black-330GSM-extra-large-4.webp",
-            price: 249, // kept from your original — example of a size+GSM combo costing more
+            price: 210, // 18x20 / 330 GSM plain — see tote-bag-pricing.ts
             blankMedia: [
               { type: "image", src: "/tote-bag-collection/330gsm/black-330-gsm-bg.webp" },
               { type: "image", src: "/tote-bag-collection/330gsm/black-330-gsm-bg.webp" },

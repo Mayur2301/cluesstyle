@@ -99,7 +99,7 @@ export async function POST(
       to: e164,
       type: "template",
       template: {
-        name: "shipping_update",
+        name: "shipping_template",
         language: { code: "en" },
         components: [
           {

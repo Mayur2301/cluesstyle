@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import { productsData, type Product } from "@/app/lib/tote-bag-collection";
+import { resolveToteVariantPrice } from "@/app/lib/tote-bag-pricing";
 
 // Pulls a representative image for a given color (or the product default) —
 // same fallback chain used on the main listing grid, since `images[]` is
@@ -432,7 +433,13 @@ function SizeCard({
   const detail = product.sizeDetails?.[size];
   const variant = gsm != null ? detail?.gsmVariants?.[gsm] : undefined;
   const cardImage = variant?.image ?? image;
-  const cardPrice = variant?.price ?? product.displayPrice;
+  // Same price table the product page and order APIs use (size + GSM), so the
+  // card price always matches what the shopper sees after clicking. This is
+  // the starting (Plain) price; Custom Print is chosen on the product page.
+  const cardPrice =
+    resolveToteVariantPrice(product.slug, { sizeKey: size, gsm, designMode: "plan" })?.sale ??
+    variant?.price ??
+    product.displayPrice;
   const cardLabel = detail?.dimension ?? size;
   const cardGsm = gsm ?? product.gsm;
 

@@ -1,12 +1,6 @@
-import nodemailer from "nodemailer";
+import { mailTransporter, MAIL_FROM_ADDRESS } from "@/app/lib/mail-transport";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+const transporter = mailTransporter;
 
 // Deliberately its own env var — NOT process.env.NEXT_PUBLIC_APP_URL — since
 // that one has pointed at a staging domain before (see app/sitemap.ts's
@@ -500,7 +494,7 @@ function buildInvoiceHtml(d: InvoiceData): string {
 export async function sendInvoiceEmail(data: InvoiceData): Promise<void> {
   const html = buildInvoiceHtml(data);
   await transporter.sendMail({
-    from: `"CluesStyle Orders" <${process.env.EMAIL_USER}>`,
+    from: `"CluesStyle Orders" <${MAIL_FROM_ADDRESS}>`,
     to: data.customerEmail,
     subject: `Order Confirmed – ${data.orderRef} | CluesStyle`,
     html,

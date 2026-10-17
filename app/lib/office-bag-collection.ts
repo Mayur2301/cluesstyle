@@ -4,6 +4,8 @@
 // Office bags don't use every field here (no sizes, no GSM tiers, no color
 // variants right now) — those fields are simply left unset on each product.
 
+import type { QtyTier } from "@/app/lib/pricing";
+
 export interface MediaItem {
   type: "image" | "video";
   src: string;
@@ -88,6 +90,10 @@ export interface Product {
   slug: string;
   sku: string;
   basePrice: number;
+  // Bulk tiers — attached to every product by attachSkus() and read by BOTH
+  // the product page and the order APIs (create-razorpay-order /
+  // create-cart-order), so the price shown is the price charged.
+  qtyTiers?: QtyTier[];
   displayPrice: number;
   originalPrice: number;
   images: string[];
@@ -162,6 +168,17 @@ export const DEFAULT_OFFER: Offer = {
   discountPct: 5,
 };
 
+// Bulk tiers from the "Corporate Bag Pricing 2026" sheet — discounts come off
+// the Single Piece sale price. 1-4 pieces = Single Piece (no discount).
+export const OFFICE_BAG_QTY_TIERS: QtyTier[] = [
+  { minQty: 5, maxQty: 24, discount: 5, label: "5-24" },
+  { minQty: 25, maxQty: 49, discount: 10, label: "25-49" },
+  { minQty: 50, maxQty: 99, discount: 15, label: "50-99" },
+  { minQty: 100, maxQty: 249, discount: 20, label: "100-249" },
+  { minQty: 250, maxQty: 499, discount: 25, label: "250-499" },
+  { minQty: 500, maxQty: Infinity, discount: 30, label: "500+" },
+];
+
 // ── Products Data ──────────────────────────────────────────────────────────────
 // Single source of truth for office bag pricing (displayPrice,
 // sameDayAvailable, etc). The create-razorpay-order API route should look
@@ -197,7 +214,7 @@ function attachSkus(raw: RawProduct[]): Product[] {
       ...c,
       sku: `${productSku}-${colorCode(c.label)}`,
     }));
-    return { ...p, sku: productSku, ...(colors ? { colors } : {}) } as Product;
+    return { ...p, sku: productSku, qtyTiers: OFFICE_BAG_QTY_TIERS, ...(colors ? { colors } : {}) } as Product;
   });
 }
 
@@ -213,9 +230,9 @@ const rawProductsData: RawProduct[] = [
     slug: "Modern-and-Minimalist-Backpack-22L-Black-With-Laptop-Compartment",
     isDefaultCategory: true,
     basePrice: 240,
-    displayPrice: 499,
-    originalPrice: 699,
-    discount: 29,
+    displayPrice: 1999,
+    originalPrice: 2999,
+    discount: 33,
     images: [
       "/office-bag/blue-office-bag/blue-office-bag-front.webp",
       "/office-bag/blue-office-bag/blue-office-bag-back.webp",
@@ -265,9 +282,9 @@ const rawProductsData: RawProduct[] = [
     slug: "mini-office-bag",
     isDefaultCategory: true,
     basePrice: 240,
-    displayPrice: 499,
-    originalPrice: 699,
-    discount: 29,
+    displayPrice: 2099,
+    originalPrice: 3199,
+    discount: 34,
     images: [
       "/mini-office-bag/mini-office-bag-front.webp",
       "/mini-office-bag/mini-office-bag-cross-side.webp",
@@ -314,9 +331,9 @@ const rawProductsData: RawProduct[] = [
     slug: "office-executive-bag",
     isDefaultCategory: true,
     basePrice: 240,
-    displayPrice: 499,
-    originalPrice: 699,
-    discount: 29,
+    displayPrice: 2299,
+    originalPrice: 3499,
+    discount: 34,
     images: [
       "/office-executive-bag/executive-bag-model-side-view.webp",
       "/office-executive-bag/executive-bag-model-front-back-side-view.webp",
@@ -366,9 +383,9 @@ const rawProductsData: RawProduct[] = [
     slug: "office-laptop-bag",
     isDefaultCategory: true,
     basePrice: 240,
-    displayPrice: 499,
-    originalPrice: 699,
-    discount: 29,
+    displayPrice: 2199,
+    originalPrice: 3299,
+    discount: 33,
     images: [
       "/office-laptop-bag/office-laptop-bag-front.webp",
       "/office-laptop-bag/office-laptop-bag-back.webp",

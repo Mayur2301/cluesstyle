@@ -643,14 +643,14 @@ export default function Badges() {
               <div className="grid min-h-[420px] grid-cols-1 lg:grid-cols-2">
                 <div className="flex flex-col justify-center p-6 md:p-10">
                   <div className="mb-3 inline-flex w-fit items-center rounded-full border border-black bg-black px-4 py-1 text-xs font-bold uppercase tracking-wider text-white">
-                     Oversized T-Shirt Collection
+                     Badge Collection
                   </div>
                   <h1 className="text-4xl font-black leading-tight tracking-tight md:text-5xl">
-                    Shop and Personalised your Own <br />
-                    <span className="text-gray-500">Oversized T-shirts</span>
+                    Shop and Personalise your Own <br />
+                    <span className="text-gray-500">Custom Badges</span>
                   </h1>
                   <p className="mt-4 max-w-xl text-base leading-relaxed text-gray-600">
-                    Premium corporate office bags for modern professionals, offering style, durability, comfort, and smart organization for everyday work needs.
+                    Custom badges for teams, events, schools, and brands. Add your logo or design, choose your style, and order a single piece or in bulk.
                   </p>
                   <div className="mt-6 flex flex-wrap gap-3">
                     {[
@@ -764,14 +764,14 @@ export default function Badges() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/70" />
           <div className="relative z-10 flex flex-col justify-end h-full px-5 py-6" style={{ minHeight: 220 }}>
             <div className="mb-2 inline-flex w-fit items-center rounded-full bg-white/20 backdrop-blur-sm border border-white/30 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
-              Oversized T-Shirt Collection
+              Badge Collection
             </div>
             <h1 className="text-2xl font-black leading-tight text-white">
-              Shop and Personalised your Own <br />
-              <span className="text-white/70">Tote Bag</span>
+              Shop and Personalise your Own <br />
+              <span className="text-white/70">Custom Badges</span>
             </h1>
             <p className="mt-1.5 text-xs text-white/80 max-w-xs">
-              Screen printing for brands, events & businesses. Starting ₹499.
+              Custom badges for teams, events, schools & brands. Single piece or bulk.
             </p>
           </div>
         </div>

@@ -225,6 +225,7 @@ export default function CheckoutClient() {
             quantity: item.quantity,
             selectedSize: item.size,
             selectedColor: item.color,
+            designMode: item.designMode,
             sizeBreakdown: item.sizeBreakdown,
             deliveryType: item.deliveryType,
             // Carries logo design / embroidery / DTF data through to the

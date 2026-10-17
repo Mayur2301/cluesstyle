@@ -1,6 +1,6 @@
 // PATH: app/api/auth/send-email-otp/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { mailTransporter, MAIL_FROM_ADDRESS } from '@/app/lib/mail-transport';
 // Was creating its own separate `mysql.createPool()` here, on top of the
 // shared pool in app/lib/db.ts — every route that did this opened its own
 // extra 10-connection pool, and all of them together were a major
@@ -10,15 +10,7 @@ import { getPool } from '@/app/lib/db';
 
 const pool = getPool();
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+const transporter = mailTransporter;
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // Send email
     await transporter.sendMail({
-      from: `"CluesStyle" <${process.env.EMAIL_USER}>`,
+      from: `"CluesStyle" <${MAIL_FROM_ADDRESS}>`,
       to: email,
       subject: 'Email Verification - CluesStyle',
       html: `
