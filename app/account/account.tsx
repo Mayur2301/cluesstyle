@@ -158,6 +158,8 @@ export default function AccountPage() {
           company:  registrationData.company  || null,
           // ✅ FIX 1: registrationData.userType is now the type the user actually selected
           userType: registrationData.userType,
+          // Proof (from the verify-email step) that this person owns the email.
+          verificationToken: verifiedData?.verificationToken,
         }),
       });
 

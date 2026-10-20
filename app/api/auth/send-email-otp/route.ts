@@ -1,6 +1,8 @@
 // PATH: app/api/auth/send-email-otp/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { randomInt } from 'crypto';
 import { mailTransporter, MAIL_FROM_ADDRESS } from '@/app/lib/mail-transport';
+import { isRateLimited, clientIp } from '@/app/lib/simple-rate-limit';
 // Was creating its own separate `mysql.createPool()` here, on top of the
 // shared pool in app/lib/db.ts — every route that did this opened its own
 // extra 10-connection pool, and all of them together were a major
@@ -14,17 +16,31 @@ const transporter = mailTransporter;
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, name, userType } = await request.json();
+    const body = await request.json();
+    const { name, userType } = body;
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
 
-    if (!email) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
-        { message: 'Email is required' },
+        { message: 'A valid email is required' },
         { status: 400 }
       );
     }
 
+    // One code per minute per email and a cap per IP, so this can't be used
+    // to spam an inbox or burn through the mail quota.
+    if (
+      isRateLimited(`signup-send:${email}`, 1, 60 * 1000) ||
+      isRateLimited(`signup-send-ip:${clientIp(request.headers)}`, 10, 60 * 60 * 1000)
+    ) {
+      return NextResponse.json(
+        { message: 'Please wait a minute before requesting another code.' },
+        { status: 429 }
+      );
+    }
+
     // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     // Store OTP in database
@@ -63,8 +79,6 @@ export async function POST(request: NextRequest) {
         </div>
       `,
     });
-
-    console.log(`OTP sent to ${email}: ${otp}`);
 
     return NextResponse.json({ 
       success: true, 

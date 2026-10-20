@@ -3,11 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '@/app/lib/db';
+import { isValidEmailVerificationToken } from '@/app/lib/email-verification-token';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, password, phone, company, userType } = body;
+    const { name, password, phone, company, userType, verificationToken } = body;
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
 
     // 🔴 1. Validate required fields
     if (!name || !email || !password || !userType) {
@@ -17,67 +19,80 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 🔴 2. Check if user already exists
-    const [existing] = await pool.execute(
-      `SELECT id FROM web_users WHERE email = ?`,
-      [email]
-    );
-
-    // 🔥 If user exists → UPDATE instead of blocking (important for OTP flow)
-    if ((existing as any[]).length > 0) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      await pool.execute(
-        `UPDATE web_users 
-         SET name = ?, password = ?, phone = ?, company = ?, account_type = ?, email_verified = 1 
-         WHERE email = ?`,
-        [name, hashedPassword, phone || null, company || null, userType, email]
+    if (typeof password !== 'string' || password.length < 6 || password.length > 72) {
+      return NextResponse.json(
+        { message: 'Password must be between 6 and 72 characters' },
+        { status: 400 }
       );
-
-      return NextResponse.json({
-        success: true,
-        message: 'Account updated successfully. Please login.'
-      });
     }
 
-    // 🔴 3. Hash password safely
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // 🔴 2. The caller must have just proven they own this email by entering
+    // the emailed code (see /api/auth/verify-email-otp). Without this anyone
+    // could create - or take over - an account for somebody else's email.
+    if (!isValidEmailVerificationToken(verificationToken, email)) {
+      return NextResponse.json(
+        { message: 'Please verify your email before creating an account.' },
+        { status: 403 }
+      );
+    }
 
-    // 🔴 4. Insert new user
-    const [result] = await pool.execute(
-      `INSERT INTO web_users 
-       (name, email, password, phone, company, account_type, approved, email_verified) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        name,
-        email,
-        hashedPassword,
-        phone || null,
-        company || null,
-        userType,
-        userType === 'user' ? 1 : 0,
-        1
-      ]
+    // 🔴 3. Look for an existing row
+    const [existing] = await pool.execute(
+      `SELECT id, password FROM web_users WHERE email = ?`,
+      [email]
     );
+    const existingUser = (existing as any[])[0];
 
-    const insertId = (result as any).insertId;
+    // A row that already has a password is a real account: NEVER overwrite
+    // it from here (that was an account-takeover hole). They can log in, or
+    // use "Forgot password?".
+    if (existingUser?.password) {
+      return NextResponse.json(
+        { message: 'An account with this email already exists. Please log in, or use "Forgot password?".' },
+        { status: 409 }
+      );
+    }
 
-    // 🔴 5. Generate JWT
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const approved = userType === 'user' ? 1 : 0;
+    let userId: number;
+
+    if (existingUser) {
+      // The password-less placeholder row that /api/auth/send-email-otp creates
+      // while the signup code is being verified - complete it.
+      await pool.execute(
+        `UPDATE web_users
+            SET name = ?, password = ?, phone = ?, company = ?, account_type = ?, approved = ?, email_verified = 1
+          WHERE id = ?`,
+        [name, hashedPassword, phone || null, company || null, userType, approved, existingUser.id]
+      );
+      userId = existingUser.id;
+    } else {
+      const [result] = await pool.execute(
+        `INSERT INTO web_users
+         (name, email, password, phone, company, account_type, approved, email_verified)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [name, email, hashedPassword, phone || null, company || null, userType, approved, 1]
+      );
+      userId = (result as any).insertId;
+    }
+
+    // 🔴 4. Generate JWT
     const token = jwt.sign(
-      { userId: insertId, email, userType, name },
+      { userId, email, userType, name },
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
 
-    // 🔴 6. Create response
+    // 🔴 5. Create response
     const response = NextResponse.json({
       success: true,
       token,
       userType,
-      user: { id: insertId, name, email }
+      user: { id: userId, name, email, userType }
     });
 
-    // 🔴 7. Secure cookie
+    // 🔴 6. Secure cookie
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

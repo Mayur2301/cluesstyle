@@ -10,6 +10,7 @@ import {
   InvoiceData as InvoiceImageData,
 } from "@/app/lib/invoice";
 import { findProductBySlug } from "@/app/lib/product-catalog";
+import { claimFulfillment } from "@/app/lib/order-fulfillment-claim";
 import { generateDesignPdf, type LogoDesign, type Side } from "@/app/lib/design-pdf";
 import { computeEmbroideryCharge, computeDtfCharge, type PrintSide } from "@/app/lib/pricing";
 
@@ -167,7 +168,9 @@ export async function POST(req: NextRequest) {
     // products are unaffected.
     const customization = parseCustomization(order.customization);
 
-    if (updateResult.affectedRows > 0) {
+    // Run the post-payment work if this request OR the Razorpay webhook marked
+    // the order paid first - whichever gets here first claims it, exactly once.
+    if (await claimFulfillment(pool, razorpay_order_id, updateResult.affectedRows > 0)) {
 
       // 4a. Invoice
       //
