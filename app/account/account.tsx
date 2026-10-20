@@ -27,6 +27,22 @@ export default function AccountPage() {
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [registrationData, setRegistrationData] = useState<any>(null);
 
+  // Forgot-password flow: (optional email step) -> code + new password -> logged in
+  const [isForgot, setIsForgot] = useState(false);
+  const [forgotStep, setForgotStep] = useState<'email' | 'reset'>('email');
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [forgotInfo, setForgotInfo] = useState('');
+  const [resendIn, setResendIn] = useState(0);
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
+
   useEffect(() => {
     try {
       const token = localStorage.getItem('token');
@@ -169,8 +185,110 @@ export default function AccountPage() {
     }
   };
 
+  // ── Forgot password ──────────────────────────────────────────────────────
+  const sendForgotOtp = async (email: string): Promise<boolean> => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/api/auth/forgot-password/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || 'Could not send the code.');
+        return false;
+      }
+      setForgotEmail(email);
+      setForgotInfo(`We've sent a 6-digit code to ${email}. Enter it below with your new password.`);
+      setResendIn(60);
+      return true;
+    } catch {
+      setError('An error occurred. Please try again.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // "Forgot password?" — if the email is already typed in the login box we
+  // don't ask for it again, we just send the code.
+  const startForgotPassword = async () => {
+    setError('');
+    setForgotOtp('');
+    setNewPassword('');
+    setConfirmNewPassword('');
+    setForgotInfo('');
+    setIsForgot(true);
+
+    const typed = loginForm.email.trim();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(typed)) {
+      setForgotStep('reset');
+      const ok = await sendForgotOtp(typed);
+      if (!ok) setForgotStep('email');
+    } else {
+      setForgotEmail(typed);
+      setForgotStep('email');
+    }
+  };
+
+  const handleForgotEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const ok = await sendForgotOtp(forgotEmail.trim());
+    if (ok) setForgotStep('reset');
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!/^\d{6}$/.test(forgotOtp.trim())) {
+      setError('Enter the 6-digit code from your email.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/auth/forgot-password/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail.trim(), otp: forgotOtp.trim(), newPassword }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.token) localStorage.setItem('token', data.token);
+        if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+        const userType = data.userType || 'user';
+        localStorage.setItem('userType', userType);
+        router.push(`/dashboard/${userType}`);
+      } else {
+        setError(data.message || 'Could not reset the password.');
+      }
+    } catch {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const backToLogin = () => {
+    setIsForgot(false);
+    setError('');
+    setForgotInfo('');
+  };
+
   const userTypes = [
-    { value: 'user',     label: 'Regular User', glyph: '01', description: 'Shop and earn rewards',        icon: '/user-icon.webp' },
+    { value: 'user',    label: 'Regular User', glyph: '01', description: 'Shop and earn rewards',        icon: '/user-icon.webp' },
     { value: 'reseller', label: 'Reseller',      glyph: '02', description: 'Bulk purchases & discounts',   icon: '/reseller.webp' },
     { value: 'club',     label: 'Club',          glyph: '03', description: 'Group orders & special deals', icon: '/club.webp' },
     { value: 'sponsor',  label: 'Sponsor',       glyph: '04', description: 'Partner & promote products',   icon: '/sponsors.webp' },
@@ -256,12 +374,95 @@ export default function AccountPage() {
           <div className={styles.formPanelInner}>
             <div className={styles.header}>
               <p className={styles.eyebrow}>{userTypes.find(t => t.value === selectedType)?.label}</p>
-              <span>{isLogin ? 'Welcome back' : 'Create your account'}</span>
+              <span>{isLogin ? (isForgot ? 'Reset your password' : 'Welcome back') : 'Create your account'}</span>
             </div>
 
             {error && <div className={styles.error}>{error}</div>}
 
-            {isLogin ? (
+            {isLogin && isForgot ? (
+              forgotStep === 'email' ? (
+                <form onSubmit={handleForgotEmailSubmit} className={styles.form}>
+                  <div className={styles.formGroup}>
+                    <label>Email address</label>
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      required
+                      autoFocus
+                      placeholder="Enter your registered email"
+                    />
+                  </div>
+                  <button type="submit" disabled={loading} className={styles.submitBtn}>
+                    {loading ? 'Sending code…' : 'Send verification code'}
+                  </button>
+                  <p className={styles.switchText}>
+                    <button type="button" onClick={backToLogin} className={styles.switchBtn}>
+                      Back to login
+                    </button>
+                  </p>
+                </form>
+              ) : (
+                <form onSubmit={handleResetPassword} className={styles.form}>
+                  {forgotInfo && (
+                    <p style={{ margin: '0 0 4px', fontSize: 13, color: '#4b5563', lineHeight: 1.5 }}>{forgotInfo}</p>
+                  )}
+                  <div className={styles.formGroup}>
+                    <label>Verification code</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      value={forgotOtp}
+                      onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, ''))}
+                      required
+                      autoFocus
+                      placeholder="6-digit code"
+                    />
+                  </div>
+                  <div className={styles.formRow}>
+                    <div className={styles.formGroup}>
+                      <label>New password</label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                        placeholder="Min 6 characters"
+                      />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label>Confirm password</label>
+                      <input
+                        type="password"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        required
+                        placeholder="Confirm password"
+                      />
+                    </div>
+                  </div>
+                  <button type="submit" disabled={loading} className={styles.submitBtn}>
+                    {loading ? 'Resetting…' : 'Reset password & login'}
+                  </button>
+                  <p className={styles.switchText}>
+                    <button
+                      type="button"
+                      onClick={() => sendForgotOtp(forgotEmail)}
+                      disabled={loading || resendIn > 0}
+                      className={styles.switchBtn}
+                    >
+                      {resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
+                    </button>
+                    {' · '}
+                    <button type="button" onClick={backToLogin} className={styles.switchBtn}>
+                      Back to login
+                    </button>
+                  </p>
+                </form>
+              )
+            ) : isLogin ? (
               <form onSubmit={handleLogin} className={styles.form}>
                 <div className={styles.formGroup}>
                   <label>Email address</label>
@@ -283,12 +484,17 @@ export default function AccountPage() {
                     placeholder="Enter your password"
                   />
                 </div>
+                <p className={styles.switchText} style={{ textAlign: 'right', margin: '-4px 0 4px' }}>
+                  <button type="button" onClick={startForgotPassword} className={styles.switchBtn}>
+                    Forgot password?
+                  </button>
+                </p>
                 <button type="submit" disabled={loading} className={styles.submitBtn}>
                   {loading ? 'Logging in…' : 'Login'}
                 </button>
                 <p className={styles.switchText}>
                   {' '}
-                  <button type="button" onClick={() => setIsLogin(false)} className={styles.switchBtn}>
+                  <button type="button" onClick={() => { setIsLogin(false); setIsForgot(false); setError(''); }} className={styles.switchBtn}>
                     Register
                   </button>
                 </p>

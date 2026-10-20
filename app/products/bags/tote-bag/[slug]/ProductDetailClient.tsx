@@ -1998,7 +1998,7 @@ function OrderModal({
                     <div className="relative">
                       <FieldIcon path="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                       <input value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })}
-                        placeholder="Mayur Santosh Gaikwad"
+                        placeholder="Full name"
                         className={`w-full h-10 border rounded-xl pl-9 pr-3 text-sm outline-none focus:border-gray-700 transition-colors ${errors.name ? "border-red-400 bg-red-50" : "border-gray-200"}`} />
                     </div>
                     {errors.name && <p className="text-red-500 text-[11px]">{errors.name}</p>}
